@@ -1,7 +1,15 @@
 pico-8 cartridge // http://www.pico-8.com
 version 16
 __lua__
+node = {}
+node.attac=" "
 root = {}
+node.left = root
+
+right = {}
+right.attac = "b"
+node.right = right
+
 root.attac = "a"
 root.left = {}
 root.left.attac = "aa"
@@ -31,19 +39,49 @@ root.right.right.left = {}
 root.right.right.left.attac="abba"
 root.right.right.right = {}
 root.right.right.right.attac="abbb"
-curr = root
+
+
+right.left = {}
+right.left.attac = "ba"
+right.right = {}
+right.right.attac = "bb"
+right.left.left = {}
+right.left.left.attac = "baa"
+right.left.right = {}
+right.left.right.attac = "bab"
+right.right.left = {}
+right.right.left.attac = "bba"
+right.right.right = {}
+right.right.right.attac = "bbb"
+right.left.left.left = {}
+right.left.left.left.attac="baaa"
+right.left.left.right = {}
+right.left.left.right.attac="baab"
+right.left.right.left = {}
+right.left.right.left.attac="baba"
+right.left.right.right = {}
+right.left.right.right.attac="babb"
+right.right.left.left = {}
+right.right.left.left.attac="bbaa"
+right.right.left.right = {}
+right.right.left.right.attac="bbab"
+right.right.right.left = {}
+right.right.right.left.attac="bbba"
+right.right.right.right = {}
+right.right.right.right.attac="bbbb"
+curr = node
 
 function _update()
 	if btnp(4) then
 	if #curr.attac == 4 then
-		curr = root
+		curr = node
 	else
 		curr = curr.left end
 	end
 	
 	if btnp(5) then
 	if #curr.attac == 4 then
-		curr = root
+		curr = node
 	else
 		curr = curr.right end
 	end
