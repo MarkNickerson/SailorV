@@ -27,6 +27,8 @@ function change_state()
     end
 end
 
+
+
 --------------------------------------------------------------------------------
 ---------------------------------- player --------------------------------------
 --------------------------------------------------------------------------------
@@ -138,7 +140,7 @@ end
 function _init()
     cls()
     player = make_player(1,1)
-
+    ninja=make_ninja(100,100)
 end
 
 function _update60()
@@ -163,6 +165,74 @@ function _draw()
 end
 
 
+------------------------------------------------ enemies
+
+function make_ninja(x,y)
+  local ninja = {
+    x=x,                 -- x position
+    y=y,                 -- y position
+    p_jump=-1.75,           -- jump velocity
+    dx=0,
+    dy=0,
+    --max_dx=1,             -- max x speed
+    --max_dy=2,             -- max y speed
+    --p_width=8,            -- sprite width
+    --p_height=16,          -- sprite height
+    p_speed=0.05,         -- acceleration force
+    drag=0.05,            -- drag force
+    gravity=0.15,         -- gravity
+
+    jump_button={
+      update=function(self)
+        if(btn(2)) then
+          self.is_jumping=true
+        else
+          self.is_jumping=false
+        end
+      end
+    },
+
+    update=function(self)
+      local b_left=btn(0)
+      local b_right=btn(1)
+
+      -- ninja spawns and runs to the left
+      --if b_left==true then
+        self.dx-=self.p_speed
+        b_right=false
+      --elseif b_right==true then
+      --  self.dx+=self.p_speed
+      -- else
+      --  self.dx*=self.drag
+      --end
+
+      self.x+=self.dx
+      self.jump_button:update()
+
+      if self.jump_button.is_jumping then
+        self.dy=self.p_jump
+      end
+
+      self.dy+=self.gravity
+      self.y+=self.dy
+
+
+      if self.y>=120 then
+        self.y = 120
+      end
+    end,
+
+    draw=function(self)
+      spr(32, self.x, self.y-8, 1, 2)
+      print ('self.y:'..(self.y), 80, 10, 5)
+    end
+  }
+  add(allninjas, ninja)
+  return ninja
+end
+
+------------------------------- end enemies
+
 -- splash
 
 function update_splash()
@@ -183,6 +253,7 @@ end
 function update_game()
   move_player()
   collisions()
+  ninja:update()
 end
 
 function draw_game()
@@ -190,6 +261,7 @@ function draw_game()
 		print('combo:'..player.combo.attac)
 		print('combo timer:'..player.combotimer)
 		print(player.incombo)
+  ninja:draw()
 end
 
 
