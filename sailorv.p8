@@ -37,6 +37,7 @@ function make_player(x,y)
     dx=0,
     dy=0,
     gravity=0.15,
+    combo = root,
   }
   return p
 end
@@ -71,6 +72,23 @@ function move_player()
   if player.y >= 120 then
     player.y = 120
   end
+  
+  
+  if btnp(4) then
+			if #player.combo.attac == 4 then
+				player.combo = root
+			else
+				player.combo = player.combo.left end
+		end
+	
+		if btnp(5) then
+			if #player.combo.attac == 4 then
+				player.combo = root
+			else
+				player.combo = player.combo.right end
+		end
+  
+  
 end
 
 function solid (x, y)
@@ -140,6 +158,7 @@ end
 
 function draw_game()
   spr(1, player.x, player.y-8, 1, 2)
+		print('combo:'..player.combo.attac)
 end
 
 
@@ -189,6 +208,76 @@ end
 function mod_zero(a,b)
    return a - flr(a/b)*b == 0
 end
+-->8
+--combo tree
+root = {}
+root.attac= " "
+left = {}
+root.left = left
+
+right = {}
+right.attac = "b"
+root.right = right
+
+left.attac = "a"
+left.left = {}
+left.left.attac = "aa"
+left.right = {}
+left.right.attac = "ab"
+left.left.left = {}
+left.left.left.attac = "aaa"
+left.left.right = {}
+left.left.right.attac = "aab"
+left.right.left = {}
+left.right.left.attac = "aba"
+left.right.right = {}
+left.right.right.attac = "abb"
+left.left.left.left = {}
+left.left.left.left.attac="aaaa"
+left.left.left.right = {}
+left.left.left.right.attac="aaab"
+left.left.right.left = {}
+left.left.right.left.attac="aaba"
+left.left.right.right = {}
+left.left.right.right.attac="aabb"
+left.right.left.left = {}
+left.right.left.left.attac="abaa"
+left.right.left.right = {}
+left.right.left.right.attac="abab"
+left.right.right.left = {}
+left.right.right.left.attac="abba"
+left.right.right.right = {}
+left.right.right.right.attac="abbb"
+
+
+right.left = {}
+right.left.attac = "ba"
+right.right = {}
+right.right.attac = "bb"
+right.left.left = {}
+right.left.left.attac = "baa"
+right.left.right = {}
+right.left.right.attac = "bab"
+right.right.left = {}
+right.right.left.attac = "bba"
+right.right.right = {}
+right.right.right.attac = "bbb"
+right.left.left.left = {}
+right.left.left.left.attac="baaa"
+right.left.left.right = {}
+right.left.left.right.attac="baab"
+right.left.right.left = {}
+right.left.right.left.attac="baba"
+right.left.right.right = {}
+right.left.right.right.attac="babb"
+right.right.left.left = {}
+right.right.left.left.attac="bbaa"
+right.right.left.right = {}
+right.right.left.right.attac="bbab"
+right.right.right.left = {}
+right.right.right.left.attac="bbba"
+right.right.right.right = {}
+right.right.right.right.attac="bbbb"
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
