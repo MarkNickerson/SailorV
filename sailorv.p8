@@ -31,89 +31,67 @@ end
 ---------------------------------- player --------------------------------------
 --------------------------------------------------------------------------------
 function make_player(x,y)
-  local player = {
-    x=x,                 -- player x position
-
-    y=y,                 -- player y position
-
-    p_jump=-1.75,           -- jump velocity
-
+  local p = {
+    x=x,
+    y=y,
     dx=0,
-
     dy=0,
-
-    --max_dx=1,             -- max x speed
-
-    --max_dy=2,             -- max y speed
-
-    --p_width=8,            -- sprite width
-
-    --p_height=16,          -- sprite height
-
-    p_speed=0.05,         -- player acceleration force
-
-    drag=0.05,            -- player drag force
-
-    gravity=0.15,         -- gravity
-
-
-
-    jump_button={
-      update=function(self)
-        if(btn(2)) then
-          self.is_jumping=true
-        else
-          self.is_jumping=false
-        end
-      end
-    },
-    update=function(self)
-      local b_left=btn(0)
-      local b_right=btn(1)
-
-      if b_left==true then
-        self.dx-=self.p_speed
-        b_right=false
-      elseif b_right==true then
-        self.dx+=self.p_speed
-      else
-        self.dx*=self.drag
-      end
-
-      self.x+=self.dx
-      self.jump_button:update()
-
-      if self.jump_button.is_jumping then
-        self.dy=self.p_jump
-      end
-
-      self.dy+=self.gravity
-      self.y+=self.dy
-
-
-      if self.y>=120 then
-        self.y = 120
-      end
-    end,
-
-    draw=function(self)
-      spr(1, self.x, self.y-8, 1, 2)
-      print ('self.y:'..(self.y), 80, 10, 5)
-    end
+    gravity=0.15,
   }
-  return player
+  return p
 end
 
 -- player input
 
-function handle_input()
+function move_player()
+  accel = 0.5
+  -- player control
+   if (btn(0)) then
+       player.dx = player.dx - accel
+       --pl.d=-1
+     end
+   if (btn(1)) then
+     player.dx = player.dx + accel
+     --pl.d=1
+   end
+
+   -- gravity and friction
+   player.dy+=player.gravity
+   player.dy*=0.95
+
+   -- x friction
+   player.dx*=0.8
+
+  -- if ((btn(4) or btn(2)) and pl.standing) then
+  --   pl.dy = -0.7
+  --end
+  player.x+=player.dx
+  player.y+=player.dy
+
+  if player.y >= 120 then
+    player.y = 120
+  end
 end
+
+function solid (x, y)
+	if (x < 0 or x >= 128 ) then
+		return true end
+
+	val = mget(x, y)
+	return fget(val, 1)
+end
+
+function collisions()
+
+end
+
 
 -- pico8 game funtions
 
 function _init()
     cls()
-    p1=make_player(64,100)
+    player = make_player(1,1)
+
 end
 
 function _update60()
@@ -156,22 +134,21 @@ end
 -- game
 
 function update_game()
-  p1:update()
+  move_player()
+  collisions()
 end
 
 function draw_game()
-  p1:draw()
+  spr(1, player.x, player.y-8, 1, 2)
 end
 
 
 -- game over
 
 function update_gameover()
-
 end
 
 function draw_gameover()
-
 end
 
 -- utils
