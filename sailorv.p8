@@ -37,6 +37,9 @@ function make_player(x,y)
     dx=0,
     dy=0,
     gravity=0.15,
+    combotimer = 60,
+    incombo = false,
+    last = false,
     combo = root,
   }
   return p
@@ -73,22 +76,50 @@ function move_player()
     player.y = 120
   end
   
+  handle_combo()
+   
+end
+
+function handle_combo()
+	if btn(4) or btn(5) then
+  	if player.last == false then
+ 			--do the thing here
+ 			player.combotimer = 60
+ 			player.incombo = true
+ 			player.last = true
   
-  if btnp(4) then
-			if #player.combo.attac == 4 then
-				player.combo = root
-			else
-				player.combo = player.combo.left end
-		end
+  
+  		if btn(4) then
+					if #player.combo.attac == 4 then
+						player.combo = root
+						player.combotimer=60
+						player.incombo = false
+					else
+						player.combo = player.combo.left end
+				end
 	
-		if btnp(5) then
-			if #player.combo.attac == 4 then
-				player.combo = root
-			else
-				player.combo = player.combo.right end
+				if btn(5) then
+					if #player.combo.attac == 4 then
+						player.combo = root
+						player.combotimer=60
+						player.incombo = false
+					else
+						player.combo = player.combo.right end
+				end
+			end
+		
+		else player.last = false
 		end
-  
-  
+		
+		if player.incombo == true then
+			player.combotimer -= 1
+		end
+		
+		if player.combotimer==0 then
+			player.combotimer=60
+			player.incombo = false
+			player.combo = root
+		end
 end
 
 function solid (x, y)
@@ -159,6 +190,8 @@ end
 function draw_game()
   spr(1, player.x, player.y-8, 1, 2)
 		print('combo:'..player.combo.attac)
+		print('combo timer:'..player.combotimer)
+		print(player.incombo)
 end
 
 
