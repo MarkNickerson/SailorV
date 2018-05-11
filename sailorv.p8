@@ -197,9 +197,9 @@ function make_ninja(x,y)
       local b_right=btn(1)
 
       -- ninja spawns and runs to the left
-      if(p1.x < self.x and self.dx > -self.max_dx) then
+      if(player.x < self.x and self.dx > -self.max_dx) then
         self.dx-=self.p_speed
-      elseif(p1.x > self.x and self.dx < self.max_dx) then
+      elseif(player.x > self.x and self.dx < self.max_dx) then
       	self.dx += self.p_speed
       end
 
@@ -220,7 +220,7 @@ function make_ninja(x,y)
     end,
 
     draw=function(self)
-      spr(32, self.x, self.y-8, 1, 2)
+      spr(64, self.x, self.y-8, 1, 2)
       print ('self.y:'..(self.y), 80, 10, 5)
     end
   }
