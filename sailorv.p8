@@ -138,6 +138,7 @@ end
 -- pico8 game funtions
 
 function _init()
+    t = 0
     cls()
     player = make_player(1,1)
     ninja=make_ninja(100,100)
@@ -237,12 +238,16 @@ function update_splash()
      if btn(5) then
          change_state()
      end
+     t+= 1
 end
 
 function draw_splash()
-    rectfill(0,0,screen_size,screen_size,11)
-    local text = "hello world"
-    write(text, text_x_pos(text), 52,7)
+    rectfill(0,0,screen_size,screen_size,1)
+    spr(96, 4, 32, 15, 4)
+    if(t % 60 >= 10) then 
+      local text = "press x to play"
+      write(text, text_x_pos(text), 72,7)
+    end
 end
 
 -- game
