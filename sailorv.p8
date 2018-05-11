@@ -91,18 +91,16 @@ function handle_combo()
   
   		if btn(4) then
 					if #player.combo.attac == 4 then
-						player.combo = root
+						player.combo = root.left
 						player.combotimer=60
-						player.incombo = false
 					else
 						player.combo = player.combo.left end
 				end
 	
 				if btn(5) then
 					if #player.combo.attac == 4 then
-						player.combo = root
+						player.combo = root.right
 						player.combotimer=60
-						player.incombo = false
 					else
 						player.combo = player.combo.right end
 				end
