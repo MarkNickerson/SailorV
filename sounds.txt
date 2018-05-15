@@ -1,7 +1,7 @@
 Sounds:
 63 health pickup
 60, 61, 62 Hit
-59 jump
+59 ninja throw
 58 player hit 
 57 enemy hit
 
