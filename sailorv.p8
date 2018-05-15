@@ -76,10 +76,10 @@ function punch()
   	actor.tmr = 0
   	if actor.sprt>=7 then
     	actor.sprt = 5
-  	end 
+  	end
   	lastpunch = true
   end
-  
+
   if actor.flp == true then
   	player.x -= 4
   else player.x += 4
@@ -107,6 +107,7 @@ function make_player(x,y)
     incombo = false,
     last = false,
     combo = root,
+    isgrounded = false
   }
   return p
 end
@@ -114,49 +115,44 @@ end
 -- player input
 
 function move_player()
-
   accel = 0.25
 
   --idle
   idle()
 
   -- player control
-
   if btn(4) or btn(5) then
-  	if player.last == false then
- 			--do the thing here
- 			player.combotimer = 60
+    if player.last == false then
+      --do the thing here
+      player.combotimer = 60
  			player.incombo = true
  			player.last = true
 
-
-  		if btn(4) then
-          punch()
-
-					if #player.combo.attac == 4 then
-						player.combo = root.left
-						player.combotimer=60
-					else
-						player.combo = player.combo.left end
-				end
-
-				if btn(5) then
-									
-										
-					if #player.combo.attac == 4 then
-						player.combo = root.right
-						player.combotimer=60
-					else
-						player.combo = player.combo.right end
-				end
-			end
-
-		else player.last = false
-		
-  
-  	if (btn(0)) then
-       player.dx = player.dx - accel
-       --pl.d=-1
+      if btn(4) then
+        punch()
+        if #player.combo.attac == 4 then
+          player.combo = root.left
+          player.combotimer=60
+        else
+          player.combo = player.combo.left
+        end
+      end
+      if btn(5) then
+        if #player.combo.attac == 4 then
+          player.combo = root.right
+          player.combotimer=60
+        else
+          player.combo = player.combo.right
+        end
+      end
+    end
+  else player.last = false
+    -- move player left
+    if (btn(0)) then
+      if (solid_tile(player.x-1, player.y)) then
+        player.dx = 0
+      else
+        player.dx = player.dx - accel
 
         actor.flp = true -- flip the direction of the sprite
         actor.sprt+=sprite_animator(0.2)
@@ -165,40 +161,53 @@ function move_player()
         if actor.sprt>=4 then
           actor.sprt = 0
         end
+      end
+    end
+    -- move player right
+    if (btn(1)) then
+      if(solid_tile(player.x + 8, player.y, 1)) then
+        player.dx = 0
+      else
+        player.dx = player.dx + accel
+        actor.flp = false -- set deafult direction of sprite
+        actor.sprt += sprite_animator(0.2) -- animate the sprite by calling the sprite_animator function
+          actor.tmr = 0 -- reset internal timer
+          if actor.sprt>=4 then -- set the max number frames to animate
+            actor.sprt = 0 -- reset the frame number, creating a loop
+          end
+        end
+    end
+  end
 
-   	end
-   	if (btn(1)) then
-     player.dx = player.dx + accel
-     --pl.d=1
+  -- gravity and friction
+  if not solid_tile(player.x, player.y + 9, 1) then
+    player.dy+=player.gravity
+    player.dy*=0.95
+    player.isgrounded = false
+  else
+    player.isgrounded = true
+    player.dy=0
+  end
 
-       actor.flp = false -- set deafult direction of sprite
-       actor.sprt += sprite_animator(0.2) -- animate the sprite by calling the sprite_animator function
-       actor.tmr = 0 -- reset internal timer
+  -- player jumping
+  if (btn(2) and player.isgrounded) then
+    player.dy-=2.5
+  end
 
-       if actor.sprt>=4 then -- set the max number frames to animate
-         actor.sprt = 0 -- reset the frame number, creating a loop
-       end
-   	end
-   
-   end
-
-   -- gravity and friction
-   player.dy+=player.gravity
-   player.dy*=0.95
-
-   -- x friction
-   player.dx*=0.8
+  -- x friction
+  player.dx*=0.8
 
   -- if ((btn(4) or btn(2)) and pl.standing) then
   --   pl.dy = -0.7
   --end
+
   player.x+=player.dx
   player.y+=player.dy
 
   if player.y >= 120 then
     player.y = 120
   end
-  
+
   handle_combo()
 
 end
@@ -215,16 +224,26 @@ function handle_combo()
 		end
 end
 
-function solid (x, y)
-	if (x < 0 or x >= 128 ) then
-		return true end
+function solid_tile(x, y, flag)
+  local tilex = ((x - (x % 8)) / 8)
+  local tiley = ((y - (y % 8)) / 8)
 
-	val = mget(x, y)
-	return fget(val, 1)
+  if (fget(mget(tilex, tiley), flag)) then
+    return true
+  else
+    return false
+  end
 end
 
-function collisions()
-
+function obs_collision(obj)
+  for f in all(obj) do
+    if(f.x == player.x)then
+      --del(obj, f)
+      --sfx(59,3)
+      --player.hearts -= 1
+    end
+    if (f.x<=0) del(obj, f)
+  end
 end
 
 
@@ -392,7 +411,7 @@ function update_game()
   ninja:update()
   foreach(shuriken, update_shuriken)
   move_player()
-  collisions()
+  obs_collision(shuriken)
   t+= 1
 end
 
@@ -401,9 +420,11 @@ function draw_game()
 	ninja:draw()
   	foreach(shuriken, draw_obj)
  	spr(actor.sprt,player.x,player.y-8,1,2,actor.flp)
+  map(0, 0, 0, 0, 128, 32)
 	print('combo:'..player.combo.attac,0,0,7)
 	print('combo timer:'..player.combotimer,0,8,7)
 	print(player.incombo,0,16,7)
+  print(player.isgrounded,0,24,7)
 end
 
 
@@ -598,6 +619,9 @@ __gfx__
 00000779999999999999999777000779777777777700007777777000000079997770000000000000000000788888888887888870000000000000000000000000
 00000077999999999999977700000077000000000000000000000000000077770000000000000000000000777777777777777700000000000000000000000000
 00000007777777777777770000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+__gff__
+0000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __map__
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -606,7 +630,9 @@ __map__
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0202020202020202020202020202020200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+2222222222202020202020202020202000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000000022220000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000000000222220000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __sfx__
 010c032000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001f0500000024050000002805000000
 01180020155551855515555185551555518555155551855510555175551355517555105551755513555175551055517555135551755510555175551355517555155551c555185551c555155551c555185551c555
@@ -692,4 +718,3 @@ __music__
 00 11121514
 00 11125314
 02 11121614
-
