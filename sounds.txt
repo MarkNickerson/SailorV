@@ -8,8 +8,9 @@ Sounds:
 
 
 
-Music:
+Music Patterns:
 0 - 2 Title screen (Moon light Densetsu)
+3 - 3 You Lose
 4 - 10 Level 1 City (Moonlight prism power, make up!)
 
 11 - 17 Level 2 Dungeon
