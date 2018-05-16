@@ -409,7 +409,9 @@ function make_ninja(x,y)
 
     walk=function(self)
       if(self.is_walking) then
-        if(t % 10 == 0 and self.sprite != 71) then
+      	if(self.dx == 0) then
+      		self.sprite = 64
+        elseif(t % 10 == 0 and self.sprite != 71) then
           self.sprite = self.sprite + 1
         elseif(t % 10 == 0 and self.sprite == 71) then
           self.sprite = 67
@@ -445,13 +447,23 @@ function make_ninja(x,y)
 
     update=function(self)
       -- ninja spawns and runs to the left
+
       if(player.x < self.x and self.dx > -self.max_dx) then
-      	self.flip = false
-        self.dx-=self.p_speed
+      	if(abs(player.x - self.x) < 8 and player.dx == 0) then --player isnt moving, ninja stops at player location
+      		self.dx = 0
+      	else
+	      	self.flip = false
+	        self.dx-=self.p_speed
+	    end
       elseif(player.x > self.x and self.dx < self.max_dx) then
-      	self.flip = true
-      	self.dx += self.p_speed
+        if(abs(player.x - self.x) < 8 and player.dx == 0) then
+      		self.dx = 0
+      	else
+	      	self.flip = true
+	      	self.dx += self.p_speed
+	    end
       end
+
 
       --self.x+=self.dx
       --self:walk()
@@ -467,11 +479,8 @@ function make_ninja(x,y)
     end,
 
     draw=function(self)
-        if(self.is_throwing) then
-          self:throw()
-        elseif (self.is_walking) then
-          self:walk()
-        end
+        self:walk()
+        self:throw()
       	spr(self.sprite, self.x, self.y-16, 1, 2, self.flip)
     end
   }
