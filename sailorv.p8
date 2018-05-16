@@ -52,17 +52,14 @@ function idle()
 end
 
 function punch()
-  if lastpunch == true then
    -- play finishing punch sound
    sfx(62,2)
-  	actor.sprt = 4
+  	actor.sprt = player.combo.sprt
   	actor.sprt += sprite_animator(0.2)
   	actor.tmr = 0
   	if actor.sprt>=7 then
     	actor.sprt = 4
   	end
-  	lastpunch = false
-  else
 
    -- play non finishing punch sound
    if rnd(10) > 5 then
@@ -70,15 +67,6 @@ function punch()
    else
      sfx(60,2)
    end
-
-  	actor.sprt = 5
-  	actor.sprt += sprite_animator(0.2)
-  	actor.tmr = 0
-  	if actor.sprt>=7 then
-    	actor.sprt = 5
-  	end
-  	lastpunch = true
-  end
 
   if actor.flp == true then
   	player.x -= 4
@@ -131,13 +119,15 @@ function move_player()
  			player.last = true
 
       if btn(4) then
-        punch()
         if #player.combo.attac == 4 then
           player.combo = root.left
           player.combotimer=60
         else
           player.combo = player.combo.left
         end
+        
+        punch()
+        
       end
       if btn(5) then
         if #player.combo.attac == 4 then
@@ -610,6 +600,7 @@ end
 --combo tree
 root = {}
 root.attac= " "
+root.sprt = 0
 left = {}
 root.left = left
 
@@ -618,12 +609,15 @@ right.attac = "b"
 root.right = right
 
 left.attac = "a"
+left.sprt = 4
 left.left = {}
 left.left.attac = "aa"
+left.left.sprt = 5
 left.right = {}
 left.right.attac = "ab"
 left.left.left = {}
 left.left.left.attac = "aaa"
+left.left.left.sprt = 4
 left.left.right = {}
 left.left.right.attac = "aab"
 left.right.left = {}
@@ -632,6 +626,7 @@ left.right.right = {}
 left.right.right.attac = "abb"
 left.left.left.left = {}
 left.left.left.left.attac="aaaa"
+left.left.left.left.sprt = 5
 left.left.left.right = {}
 left.left.left.right.attac="aaab"
 left.left.right.left = {}
