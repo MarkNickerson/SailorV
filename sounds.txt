@@ -4,23 +4,26 @@ Sounds:
 59 ninja throw
 58 player hit 
 57 enemy hit
+55 step/run
 
 
 
 
-Music:
+Music Patterns:
 0 - 2 Title screen (Moon light Densetsu)
-4 - 10 Level 1 City (Moonlight prism power, make up!)
+3 - 3 You Lose
+4 - 10 Level 1 City (Moonlight prism power, make up!) 
+11 - 18 Level 2 Dungeon (Youma Attack)
+19 - 23 Mini Boss battle
+25 - 30 Level 3 Factory
+32 - 37 Final Boss battle
+37 - 40 Victory  theme 
 
-11 - 17 Level 2 Dungeon
-19 - 25 Level 3 Factory
-27 - 30 Mini Boss battle
-32 - 35 Final Boss battle
-37 - 39 Ending theme 
+
+
 
 Level songs should be about 6 patterns
 Boss Battles about 3
-Ending theme about 2
 
 
 Potential dungeon: 
@@ -30,7 +33,6 @@ https://www.youtube.com/watch?v=YhGrgfjVYfU&list=PL3CRUt-GCCPPpiB0sVqNxUzbNQQkoZ
 
 
 Potential Factory:
-https://www.youtube.com/watch?v=CJoIYjkX74E&index=19&list=PL3CRUt-GCCPPpiB0sVqNxUzbNQQkoZsn1
 
 https://www.youtube.com/watch?v=DJFuGbXEMEk&list=PL3CRUt-GCCPPpiB0sVqNxUzbNQQkoZsn1&index=7
 
