@@ -477,15 +477,15 @@ function make_ninja(x,y)
     update=function(self)
       -- ninja spawns and runs to the left
 
-      if(player.x < self.x and self.dx > -self.max_dx) then
-      	if(abs(player.x - self.x) < 8 and player.dx == 0) then --player isnt moving, ninja stops at player location
+      if(player.x <= self.x-10 and self.dx > -self.max_dx) then
+      	if((self.x - player.x) < 16 and player.dx == 0) then --player isnt moving, ninja stops at player location
       		self.dx = 0
       	else
 	      	self.flip = false
 	        self.dx-=self.p_speed
 	    end
-      elseif(player.x > self.x and self.dx < self.max_dx) then
-        if(abs(player.x - self.x) < 8 and player.dx == 0) then
+      elseif(player.x > self.x+2 and self.dx < self.max_dx) then
+        if((player.x - self.x) < 8 and player.dx == 0) then
       		self.dx = 0
       	else
 	      	self.flip = true
