@@ -38,25 +38,30 @@ end
 --------------------------------------------------------------------------------
 actor = {} -- initalize the sprite object
 actor.sprt = 0 -- sprite starting frame
-actor.tmr = 1 -- internal timer for managing animation
+actor.idletmr = 1 -- internal timer for managing animation
 actor.flp = false -- used for flipping the sprite
 
 function idle()
-  actor.tmr = actor.tmr+1 -- interal timer to activate waiting animations
-  if actor.tmr>=10 then -- after 1/3 of sec, jump to sprite 6
+  actor.idletmr = actor.idletmr+1 -- interal timer to activate waiting animations
+  if actor.idletmr>=10 then -- after 1/3 of sec, jump to sprite 6
     actor.sprt = 8
   end
-  if actor.tmr >= 60 then -- after 2 sec jump frame 8
+  if actor.idletmr >= 60 then -- after 2 sec jump frame 8
     actor.sprt = 9
   end
-  if actor.tmr >= 62 then -- and jump back to frame 6,
+  if actor.idletmr >= 62 then -- and jump back to frame 6,
     actor.sprt = 8
-    actor.tmr = 0 -- restart timer
+    actor.idletmr = 0 -- restart timer
   end
 end
 
 function block()
-
+  actor.sprt = 6
+  actor.idletmr = 0
+  actor.sprt += sprite_animator(1)
+  if actor.sprt>=8 then
+    actor.sprt = 7
+  end
 end
 
 function punch()
@@ -65,7 +70,7 @@ function punch()
    sfx(62, 3)
   	actor.sprt = player.combo.sprt
   	actor.sprt += sprite_animator(0.2)
-  	actor.tmr = 0
+  	actor.idletmr = 0
   	if actor.sprt>=7 then
     	actor.sprt = 4
   	end
@@ -131,6 +136,10 @@ function move_player()
   --idle
   idle()
 
+  if btn(3) then
+      block()
+  end
+
   -- player control
   if btn(4) or btn(5) then
     if player.last == false then
@@ -146,7 +155,6 @@ function move_player()
         else
           player.combo = player.combo.left
         end
-
         punch()
 
       end
@@ -166,7 +174,7 @@ function move_player()
 
       actor.flp = true -- flip the direction of the sprite
       actor.sprt+=sprite_animator(0.2)
-      actor.tmr = 0
+      actor.idletmr = 0
 
 
       if actor.sprt>=4 then
@@ -178,9 +186,9 @@ function move_player()
     if (btn(1)) then
       player.dx = player.dx + accel
 
-      actor.flp = false -- set deafult direction of sprite
+      actor.flp = false -- set default direction of sprite
       actor.sprt += sprite_animator(0.2) -- animate the sprite by calling the sprite_animator function
-      actor.tmr = 0 -- reset internal timer
+      actor.idletmr = 0 -- reset internal timer
       if actor.sprt>=4 then -- set the max number frames to animate
           sfx(55, 3) -- play walking sound
         actor.sprt = 0 -- reset the frame number, creating a loop
