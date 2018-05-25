@@ -297,7 +297,7 @@ function move_actor(actor)
     move_player()
   end
   if (actor.tag == 2) then
-    ninja:update()
+    update_ninja(actor)
   end
 
 
@@ -310,6 +310,7 @@ function move_actor(actor)
     while(not solid(actor.x + sgn(actor.dx)*0.3, actor.y-0.5)) do
       actor.x += sgn(actor.dx)*0.1
     end
+    actor.dx = 0
   end
   -- end actor.x movement
 
@@ -400,6 +401,11 @@ end
 shuriken = {
   tag = 3
 }
+
+allninjas = {
+  tag = 2
+}
+
 function update_shuriken(obj)
 	if(t % 6 == 0) then
     if solid(obj.x, obj.y) then
@@ -450,90 +456,79 @@ function make_ninja(x,y)
     sprite = 67,
     is_throwing = false,
     is_walking = true,
-    throw_mod = 200,
+    throw_mod = 200 + flr(rnd(100)),
     throw_timer = 0,
-    hearts = 5,
-
-    walk=function(self)
-      if(self.is_walking) then
-      	if(self.dx == 0) then
-      		self.sprite = 64
-        elseif(t % 10 == 0 and self.sprite != 71) then
-          self.sprite = self.sprite + 1
-        elseif(t % 10 == 0 and self.sprite == 71) then
-          sfx(55, 3) -- play walking sound
-          self.sprite = 67
-        end
-      end
-    end,
-
-    throw=function(self)
-      	if(self.is_throwing == true) then
-        if(self.throw_timer == 0) then -- spawn a shuriken once animation finishes
-                sfx(59, 3)
-      			if(self.flip) then -- facing right
-      				create_obs(shuriken, 79, self.x+4, self.y-10, -1)
-      			else -- facing left
-      				create_obs(shuriken, 79, self.x-4, self.y-10, 1)
-      			end
-      			self.is_throwing = false
-            self.is_walking = true
-      			self.throw_mod -= 1
-      			self.sprite = 67
-      		elseif(self.throw_timer > 13) then
-      			self.sprite = 65
-      		elseif(self.throw_timer > 0) then
-      			self.sprite = 66
-      		end
-      		self.throw_timer -= 2
-        elseif(t % self.throw_mod == 0) then -- cannot throw while previous throw is being completed
-          self.is_throwing=true
-          self.is_walking = false
-          self.throw_timer =20
-        end
-    end,
-
-    update=function(self)
-      -- ninja spawns and runs to the left
-
-      if(player.x <= self.x-10 and self.dx > -self.max_dx) then
-      	if((self.x - player.x) < 16 and player.dx == 0) then --player isnt moving, ninja stops at player location
-      		self.dx = 0
-      	else
-	      	self.flip = false
-	        self.dx-=self.p_speed
-	    end
-      elseif(player.x > self.x+2 and self.dx < self.max_dx) then
-        if((player.x - self.x) < 8 and player.dx == 0) then
-      		self.dx = 0
-      	else
-	      	self.flip = true
-	      	self.dx += self.p_speed
-	    end
-      end
-
-
-      --self.x+=self.dx
-      --self:walk()
-      --self:throw()
-
-      self.dy+=self.gravity
-      --self.y+=self.dy
-
-
-      --if self.y>=120 then
-        --self.y = 120
-      --end
-    end,
-
-    draw=function(self)
-        self:walk()
-        self:throw()
-      	spr(self.sprite, self.x, self.y-16, 1, 2, self.flip)
-    end
+    hearts = 5
   }
   add(allninjas, ninja)
   return ninja
+end
+
+function walk_ninja(ninja)
+  if(ninja.is_walking) then
+  	if(ninja.dx == 0) then
+  		ninja.sprite = 64
+    elseif(t % 10 == 0 and ninja.sprite != 71) then
+      ninja.sprite = ninja.sprite + 1
+    elseif(t % 10 == 0 and ninja.sprite == 71) then
+      sfx(55, 3) -- play walking sound
+      ninja.sprite = 67
+    end
+  end
+end
+
+function throw_ninja(ninja)
+  	if(ninja.is_throwing == true) then
+    if(ninja.throw_timer == 0) then -- spawn a shuriken once animation finishes
+            sfx(59, 3)
+  			if(ninja.flip) then -- facing right
+  				create_obs(shuriken, 79, ninja.x+4, ninja.y-10, -1)
+  			else -- facing left
+  				create_obs(shuriken, 79, ninja.x-4, ninja.y-10, 1)
+  			end
+  			ninja.is_throwing = false
+        ninja.is_walking = true
+  			ninja.throw_mod = 200 + flr(rnd(100))
+  			ninja.sprite = 67
+  		elseif(ninja.throw_timer > 13) then
+  			ninja.sprite = 65
+  		elseif(ninja.throw_timer > 0) then
+  			ninja.sprite = 66
+  		end
+  		ninja.throw_timer -= 2
+    elseif(t % ninja.throw_mod == 0) then -- cannot throw while previous throw is being completed
+      ninja.is_throwing=true
+      ninja.is_walking = false
+      ninja.throw_timer =20
+    end
+end
+
+function update_ninja(ninja)
+  -- ninja spawns and runs to the left
+
+  if(player.x < ninja.x and ninja.dx > -ninja.max_dx) then
+  	if((ninja.x - player.x) < 8) then --player isnt moving, ninja stops at player location
+  		ninja.dx = 0
+  	else
+    	ninja.flip = false
+      ninja.dx-=ninja.p_speed
+  end
+  elseif(player.x > ninja.x and ninja.dx < ninja.max_dx) then
+    if((player.x - ninja.x) < 8) then
+  		ninja.dx = 0
+  	else
+    	ninja.flip = true
+    	ninja.dx += ninja.p_speed
+    end
+  end
+
+  ninja.dy+=ninja.gravity
+end
+
+function draw_ninja(ninja)
+    walk_ninja(ninja)
+    throw_ninja(ninja)
+  	spr(ninja.sprite, ninja.x, ninja.y-16, 1, 2, ninja.flip)
 end
 
 ------------------------------- end enemies
@@ -561,7 +556,9 @@ end
 
 function init_game()
 	player = make_player(20,1)
-	ninja=make_ninja(100,100)
+	ninja = make_ninja(100,100)
+  ninja = make_ninja(150,100)
+  ninja = make_ninja(200,100)
 end
 
 function update_game()
@@ -569,7 +566,8 @@ function update_game()
   foreach(shuriken, update_shuriken)
   --move_player()
   move_actor(player)
-  move_actor(ninja)
+  foreach(allninjas, move_actor)
+  --move_actor(ninja)
 
   t+= 1
 end
@@ -594,8 +592,7 @@ function draw_game()
   map(0, 17, 0, y, 128, 32)
   palt(0, true)
   map(0, 0, 0, 0, 128, 32)
-
-	ninja:draw()
+  foreach(allninjas, draw_ninja)
   	foreach(shuriken, draw_obj)
  	spr(actor.sprt,player.x,player.y-16,1,2,actor.flp)
 
