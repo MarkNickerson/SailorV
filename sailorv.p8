@@ -456,7 +456,7 @@ function make_ninja(x,y)
     sprite = 67,
     is_throwing = false,
     is_walking = true,
-    throw_mod = 200,
+    throw_mod = 200 + flr(rnd(100)),
     throw_timer = 0,
     hearts = 5
   }
@@ -488,7 +488,7 @@ function throw_ninja(ninja)
   			end
   			ninja.is_throwing = false
         ninja.is_walking = true
-  			ninja.throw_mod -= 1
+  			ninja.throw_mod = 200 + flr(rnd(100))
   			ninja.sprite = 67
   		elseif(ninja.throw_timer > 13) then
   			ninja.sprite = 65
@@ -557,6 +557,8 @@ end
 function init_game()
 	player = make_player(20,1)
 	ninja = make_ninja(100,100)
+  ninja = make_ninja(150,100)
+  ninja = make_ninja(200,100)
 end
 
 function update_game()
