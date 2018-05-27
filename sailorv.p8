@@ -638,8 +638,8 @@ function draw_game()
   local x = t / 8
   x = x % 128
   local y=0
-  map(21, 16, -x, y, 16, 16, 0)
-  map(21, 16, 128-x, y, 16, 16, 0)
+  map(21, 16, -(cam.x)/3, y, 16, 16, 0)
+  map(21, 16, (128-cam.x)/3, y, 16, 16, 0)
 
   --static skyline
   palt(0, false)
@@ -653,8 +653,8 @@ function draw_game()
 
   palt(0, false)
   palt(1, true)
-  map(0, 17, (-player.x)/6, y, 128, 32, 0x5)
-  map(0, 17, 128-((player.x)/6), y, 128, 32, 0x5)
+  map(0, 17, (-cam.x)/6, y, 128, 32, 0x5)
+  map(0, 17, 128-((cam.x)/6), y, 128, 32, 0x5)
   palt(1,false)
   palt(0, true)
 
