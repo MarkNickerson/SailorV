@@ -300,9 +300,13 @@ function obs_collision(obj1, obj2)
         end
       end
     elseif obj1.tag == 2 then
-      if((f.y <= obj2.y+4) and (f.y >= obj2.y-18)) and ((f.x <= obj2.x+8) and (f.x >= obj2.x-8)) then
-
-        del(obj1, f)
+      if((f.y <= obj2.y+8) and (f.y >= obj2.y-8)) and ((f.x <= obj2.x+8) and (f.x >= obj2.x-8)) then
+        if actor.flp == true then
+            f.x -= 6.5
+            else
+        f.x += 6.5
+        end
+        --del(obj1, f)
       end
     end
       --sound effect
@@ -1012,3 +1016,4 @@ __music__
 00 2e353444
 00 2f313244
 04 30313344
+
