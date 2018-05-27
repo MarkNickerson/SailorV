@@ -356,7 +356,7 @@ function move_actor(actor)
     -- floor collision detection
     if (solid(actor, actor.x-0.2, actor.y+actor.dy) or solid(actor, actor.x+0.2, actor.y+actor.dy)) then
       -- if is jumping, don't change dy
-      if (actor.dy > 2.5) then
+      if (actor.dy > 3) then
         actor.dy = actor.dy
       else
 
@@ -634,6 +634,7 @@ function draw_game()
 	print('combo:'..player.combo.attac,cam.x,0,7)
 	print('combo timer:'..player.combotimer,cam.x,8,7)
 	print(player.incombo,cam.x,16,7)
+  print(player.dy,cam.x + 5,24,0)
   draw_hearts()
   camera(0,0)
 end
