@@ -651,10 +651,7 @@ function draw_game()
   if (player.x-cam.x>64+25) then cam.x+=1 end
   camera(cam.x, cam.y)
 
-  palt(0, false)
-  y = 0
-  map(0, 17, 0, y, 128, 32)
-  palt(0, true)
+
   map(0, 0, 0, 0, 128, 32)
   foreach(allninjas, draw_ninja)
   	foreach(shuriken, draw_obj)
