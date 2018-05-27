@@ -310,7 +310,7 @@ function obs_collision(obj1, obj2)
         if f.health <= 0 then
             del(obj1, f)
         end
-        
+
       end
     end
       --sound effect
@@ -576,33 +576,35 @@ function update_splash()
 end
 
 function draw_splash()
-    rectfill(0,0,screen_size,screen_size,1)
-    local x = t / 8
-    x = x % 128
-    local y=0
-    map(21, 16, -x, y, 16, 16, 0)
-    map(21, 16, 128-x, y, 16, 16, 0)
+  rectfill(0,0,screen_size,screen_size,1)
+  local x = t / 8
+  x = x % 128
+  local y=0
+  map(21, 16, -x, y, 16, 16, 0)
+  map(21, 16, 128-x, y, 16, 16, 0)
 
-    palt(0, false)
-    pal(13,2)
-    map(0, 17, (-x)/3, y-8, 128, 32, 0x5)
-    map(0, 17, 128-(x/3), y-8, 128, 32, 0x5)
-    pal()
-    palt(0, true)
+  --static skyline
+  palt(0, false)
+  palt(1, true)
+  pal(13,2)
+  y = 0
+  map(0, 17, 0, y-8, 128, 32)
+  pal()
+  palt(1,false)
+  palt(0, true)
 
-    --static skyline
-    palt(0, false)
-    palt(1, true)
-    y = 0
-    map(0, 17, 0, y, 128, 32)
-    palt(1,false)
-    palt(0, true)
+  palt(0, false)
+  palt(1, true)
+  map(0, 17, (-x)/2, y, 128, 32, 0x5)
+  map(0, 17, 128-((x)/2), y, 128, 32, 0x5)
+  palt(1, false)
+  palt(0, true)
 
-    spr(208, 4, 32, 15, 3)
-    if(t % 60 >= 10) then
-      local text = "press x to play"
-      write(text, text_x_pos(text), 72,7)
-    end
+  spr(208, 4, 32, 15, 3)
+  if(t % 60 >= 10) then
+    local text = "press x to play"
+    write(text, text_x_pos(text), 72,7)
+  end
 end
 
 -- game
@@ -635,18 +637,20 @@ function draw_game()
   map(21, 16, -x, y, 16, 16, 0)
   map(21, 16, 128-x, y, 16, 16, 0)
 
-  palt(0, false)
-  pal(13,2)
-  map(0, 17, (-player.x)/6, y-8, 128, 32, 0x5)
-  map(0, 17, 128-((player.x)/6), y-8, 128, 32, 0x5)
-  pal()
-  palt(0, true)
-
   --static skyline
   palt(0, false)
   palt(1, true)
+  pal(13,2)
   y = 0
-  map(0, 17, 0, y, 128, 32)
+  map(0, 17, 0, y-8, 128, 32)
+  pal()
+  palt(1,false)
+  palt(0, true)
+
+  palt(0, false)
+  palt(1, true)
+  map(0, 17, (-player.x)/6, y, 128, 32, 0x5)
+  map(0, 17, 128-((player.x)/6), y, 128, 32, 0x5)
   palt(1,false)
   palt(0, true)
 
@@ -1124,4 +1128,3 @@ __music__
 00 2e353444
 00 2f313244
 04 30313344
-
