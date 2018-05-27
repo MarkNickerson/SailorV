@@ -303,10 +303,14 @@ function obs_collision(obj1, obj2)
       if((f.y <= obj2.y+8) and (f.y >= obj2.y-8)) and ((f.x <= obj2.x+8) and (f.x >= obj2.x-8)) then
         if actor.flp == true then
             f.x -= 6.5
-            else
-        f.x += 6.5
+        else
+            f.x += 6.5
         end
-        --del(obj1, f)
+        f.health -= obj2.combo.dmg
+        if f.health <= 0 then
+            del(obj1, f)
+        end
+        
       end
     end
       --sound effect
@@ -480,7 +484,7 @@ function make_ninja(x,y)
     drag=0.02,            -- drag force
     gravity=0.15,         -- gravity
     flip = false,		-- false == left facing, true == right facing
-    health = 20,
+    health = 5,
     sprite = 67,
     is_throwing = false,
     is_walking = true,
@@ -755,43 +759,53 @@ root.left = left
 right = {}
 right.attac = "b"
 right.sprt = 10
+right.dmg = 2
 root.right = right
 
 left.attac = "a"
 left.sprt = 4
+left.dmg = 1
 left.left = {}
 left.left.attac = "aa"
 left.left.sprt = 5
+left.left.dmg = 1
 left.right = {}
 left.right.attac = "ab"
 left.left.left = {}
 left.left.left.attac = "aaa"
 left.left.left.sprt = 4
+left.left.left.dmg = 1
 left.left.right = {}
 left.left.right.attac = "aab"
 left.right.left = {}
 left.right.left.attac = "aba"
 left.right.left.sprt = 5
+left.right.left.dmg = 1
 left.right.right = {}
 left.right.right.attac = "abb"
 left.left.left.left = {}
 left.left.left.left.attac="aaaa"
 left.left.left.left.sprt = 5
+left.left.left.left.dmg = 3
 left.left.left.right = {}
 left.left.left.right.attac="aaab"
 left.left.right.left = {}
 left.left.right.left.attac="aaba"
 left.left.right.left.sprt = 4
+left.left.right.left.dmg = 3
 left.left.right.right = {}
 left.left.right.right.attac="aabb"
+left.left.right.right.sprt = 10
 left.right.left.left = {}
 left.right.left.left.attac="abaa"
 left.right.left.left.sprt = 4
+left.right.left.left.dmg = 3
 left.right.left.right = {}
 left.right.left.right.attac="abab"
 left.right.right.left = {}
 left.right.right.left.attac="abba"
 left.right.right.left.sprt = 5
+left.right.right.left.dmg = 3
 left.right.right.right = {}
 left.right.right.right.attac="abbb"
 
@@ -799,36 +813,43 @@ left.right.right.right.attac="abbb"
 right.left = {}
 right.left.attac = "ba"
 right.left.sprt = 4
+right.left.dmg = 1
 right.right = {}
 right.right.attac = "bb"
 right.left.left = {}
 right.left.left.attac = "baa"
 right.left.left.sprt = 5
+right.left.left.dmg = 1
 right.left.right = {}
 right.left.right.attac = "bab"
 right.right.left = {}
 right.right.left.attac = "bba"
 right.right.left.sprt = 4
+right.right.left.dmg = 1
 right.right.right = {}
 right.right.right.attac = "bbb"
 right.left.left.left = {}
 right.left.left.left.attac="baaa"
 right.left.left.left.sprt = 4
+right.left.left.left.dmg = 3
 right.left.left.right = {}
 right.left.left.right.attac="baab"
 right.left.right.left = {}
 right.left.right.left.attac="baba"
 right.left.right.left.sprt = 5
+right.left.right.left.dmg = 3
 right.left.right.right = {}
 right.left.right.right.attac="babb"
 right.right.left.left = {}
 right.right.left.left.attac="bbaa"
 right.right.left.left.sprt = 5
+right.right.left.left.dmg = 3
 right.right.left.right = {}
 right.right.left.right.attac="bbab"
 right.right.right.left = {}
 right.right.right.left.attac="bbba"
 right.right.right.left.sprt = 4
+right.right.right.left.dmg = 3
 right.right.right.right = {}
 right.right.right.right.attac="bbbb"
 __gfx__
@@ -1103,3 +1124,4 @@ __music__
 00 2e353444
 00 2f313244
 04 30313344
+
