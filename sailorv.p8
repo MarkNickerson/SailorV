@@ -132,7 +132,8 @@ function make_player(x,y)
     last = false,
     combo = root,
     isgrounded = false,
-    hearts=3
+    hearts=3,
+    time=0
   }
   return p
 end
@@ -245,6 +246,7 @@ function move_player()
   --if player.y >= 120 then
     --player.y = 120
   --end
+  player.time+=1
 
   handle_combo()
 
@@ -292,6 +294,7 @@ function obs_collision(obj1, obj2)
         if blocking == false then
 
           if obj2.hearts > 0 then
+            taking_damage = true
             obj2.hearts -= 1
           end
         else
@@ -402,6 +405,7 @@ end
 
 function _init()
     t = 0
+    taking_damage = false
     cls()
     --camera(0, 0)
     music(1)
@@ -672,7 +676,7 @@ function draw_game()
       circfill(player.x-1, player.y-8, inner, 0)
     end
   end
- 	spr(actor.sprt,player.x,player.y-16,1,2,actor.flp)
+ 	draw_player()
 
 
 
@@ -691,6 +695,21 @@ function update_gameover()
 end
 
 function draw_gameover()
+end
+
+function draw_player()
+  if(taking_damage) then
+      for j=2,15 do
+        pal(j,7+((player.time/2) % 4))
+      end
+
+      if(t%10==0) then
+        taking_damage = false
+      end
+    end
+
+  spr(actor.sprt,player.x,player.y-16,1,2,actor.flp)
+  pal()
 end
 
 -- draw hearts ui
