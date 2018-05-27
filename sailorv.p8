@@ -300,7 +300,7 @@ function obs_collision(obj1, obj2)
         end
       end
     elseif obj1.tag == 2 then
-      if((f.y <= obj2.y+32) and (f.y >= obj2.y-32)) and ((f.x <= obj2.x+23) and (f.x >= obj2.x-23)) then
+      if((f.y <= obj2.y+4) and (f.y >= obj2.y-18)) and ((f.x <= obj2.x+8) and (f.x >= obj2.x-8)) then
 
         del(obj1, f)
       end
