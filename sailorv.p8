@@ -92,13 +92,13 @@ function punch()
    end
 
   if actor.flp == true then
-    if player.x-4 <= 0  or (solid(player.x-4, player.y-0.5)) then
+    if player.x-4 <= 0  or (solid(player, player.x-4, player.y-0.5)) then
       player.x = player.x
     else
       player.x -= 4
     end
   else
-    if (solid(player.x+4, player.y-0.5)) then
+    if (solid(player, player.x+4, player.y-0.5)) then
       player.x = player.x
     else
     player.x += 4
@@ -140,9 +140,9 @@ end
 -- player input
 
 function move_player()
-    
+
   accel = 0.25
-  
+
 
   --idle
   idle()
@@ -262,15 +262,24 @@ function handle_combo()
 		end
 end
 
-function solid(x, y)
+function solid(obs, x, y)
   local tilex1 = ((x - (x % 8)) / 8)
   local tilex2 = ((x - (x % 8) + 8) / 8)
-  local tiley = ((y - (y % 8)) / 8)
+  local tiley1 = ((y - (y % 8)) / 8)
+  local tiley2 = ((y - (y % 8) - 8) / 8)
 
-  if (fget(mget(tilex1, tiley), 1)) or (fget(mget(tilex2, tiley), 1)) then
-    return true
-  else
-    return false
+  if ((obs.tag == 1) or (obs.tag == 2)) then
+    if (fget(mget(tilex1, tiley1), 1)) or (fget(mget(tilex2, tiley1), 1)) or (fget(mget(tilex1, tiley2), 1)) or (fget(mget(tilex2, tiley2), 1))then
+      return true
+    else
+      return false
+    end
+  elseif (obs.tag == 3) then
+    if (fget(mget(tilex1, tiley1), 1)) then
+      return true
+    else
+      return false
+    end
   end
 end
 
@@ -281,7 +290,7 @@ function obs_collision(obj1, obj2)
 
         del(obj1, f)
         if blocking == false then
-          
+
           if obj2.hearts > 0 then
             obj2.hearts -= 1
           end
@@ -319,10 +328,10 @@ function move_actor(actor)
   -- begin actor.x movement
   local x1 = actor.x + actor.dx + sgn(actor.dx)*0.3
 
-  if(not solid(x1, actor.y-8.5)) then
+  if(not solid(actor, x1, actor.y-0.5)) then
     actor.x += actor.dx
   else
-    while(not solid(actor.x + sgn(actor.dx)*0.3, actor.y-0.5)) do
+    while(not solid(actor, actor.x + sgn(actor.dx)*0.3, actor.y-0.5)) do
       actor.x += sgn(actor.dx)*0.1
     end
     actor.dx = 0
@@ -333,11 +342,11 @@ function move_actor(actor)
   actor.isgrounded = false
   if (actor.dy < 0) then
     -- cieling collision detection
-    if (solid(actor.x-0.2, actor.y-(16)+(actor.dy-1)) or solid(actor.x+0.2, actor.y-(16)+(actor.dy-1))) then
+    if (solid(actor, actor.x-0.2, actor.y+(actor.dy-1)) or solid(actor, actor.x+0.2, actor.y+(actor.dy-1))) then
       actor.dy = 0
 
       -- search up for collision point
-      while ( not (solid(actor.x-0.2, actor.y-(16)-(1)) or solid(actor.x+0.2, actor.y-(16)-(1)))) do
+      while ( not (solid(actor, actor.x-0.2, actor.y-8) or solid(actor, actor.x+0.2, actor.y-8))) do
         actor.y -= 0.01
       end
     else
@@ -345,7 +354,7 @@ function move_actor(actor)
     end
   else
     -- floor collision detection
-    if (solid(actor.x-0.2, actor.y+actor.dy) or solid(actor.x+0.2, actor.y+actor.dy)) then
+    if (solid(actor, actor.x-0.2, actor.y+actor.dy) or solid(actor, actor.x+0.2, actor.y+actor.dy)) then
       -- if is jumping, don't change dy
       if (actor.dy > 2.5) then
         actor.dy = actor.dy
@@ -356,10 +365,10 @@ function move_actor(actor)
       end
 
       -- remove ability to sneak through walls
-      while (not (solid(actor.x-0.2,actor.y) or solid(actor.x+0.2,actor.y))) do
+      while (not (solid(actor, actor.x-0.2,actor.y) or solid(actor, actor.x+0.2,actor.y))) do
         actor.y += 0.05
       end
-      while(solid(actor.x+0.2,actor.y-0.1)) do
+      while(solid(actor, actor.x+0.2,actor.y-0.1)) do
         actor.y -= 0.05
       end
     else
@@ -423,7 +432,7 @@ allninjas = {
 
 function update_shuriken(obj)
 	if(t % 6 == 0) then
-    if solid(obj.x, obj.y) then
+    if solid(obj, obj.x, obj.y) then
       obj.x = obj.x
       obj.flip = false
     else
@@ -1002,4 +1011,3 @@ __music__
 00 2e353444
 00 2f313244
 04 30313344
-
