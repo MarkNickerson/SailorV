@@ -589,9 +589,9 @@ function walk_ninja(ninja)
   if(ninja.is_walking) then
   	if(ninja.dx == 0) then
   		ninja.sprite = 64
-    elseif(t % 10 == 0 and ninja.sprite != 71) then
+    elseif(t % 10 == 0 and ninja.sprite != 72) then
       ninja.sprite = ninja.sprite + 1
-    elseif(t % 10 == 0 and ninja.sprite == 71) then
+    elseif(t % 10 == 0 and ninja.sprite == 72) then
       play_sound_effect(sound_effects.footstep)
       ninja.sprite = 67
     end
