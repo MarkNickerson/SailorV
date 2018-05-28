@@ -13,7 +13,7 @@ explosition
 SFX:
 0-4 Title Screen
 5 Death screen
-6-7 PreLevel theme
+7 PreLevel theme
 8-13 Level1 Theme
 14-18 and 28 Level2 Theme
 19-27 Miniboss

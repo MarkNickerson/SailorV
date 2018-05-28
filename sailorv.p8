@@ -10,9 +10,15 @@ __lua__
 --------------------------------------------------------------------------------
 game_states = {
     splash = 0,
-    game = 1,
-    gameover = 2
+    level1 = 1, -- 
+    level2 = 2, -- dungeon
+    level3 = 3, -- factory
+    level4 = 4, -- factory escape
+    lose_screen = 5,
+    win_screen = 6,
+    loading_screen = 7,
 }
+
 cam = {
   x = 0,
   y = 0
@@ -20,17 +26,69 @@ cam = {
 
 state = game_states.splash
 
-function change_state()
+next_state = game_states.splash -- level to load after loading screen
+
+loading_end_time = 0 -- keeps track of when loading screen ends automatically
+loading_time = 5 -- wait about 5 seconds before advancing
+
+function change_state(desired_state)
     cls()
-    if state == game_states.splash then
-        change_music(music_states.city)
-        state = game_states.game
-        init_game() -- inits stuff for game state
-    elseif state == game_states.game then
-        state = game_states.gameover
-    elseif state == game_states.gameover then
+    -- if loading a level that's not the win, lose, or splash screen, show the loading screen before hand 
+    -- change music based on desired scene as well
+    if state != game_states.loading_screen and is_battle_state(desired_state) then
+        -- requesting a new level but not in loading screen yet
+        loading_end_time = time() + loading_time -- wait loading_time seconds before automatically moving on
+        change_music(music_states.loading_screen)
+        next_state = desired_state -- store the desired scene
+        state = game_states.loading_screen -- and go to loading screen instead
+    elseif state == game_states.loading_screen and is_battle_state(desired_state) then
+        init_game()
+
+        if desired_state == game_states.level1 then
+            change_music(music_states.city)
+        elseif desired_state == game_states.level2 then
+            change_music(music_states.dungeon)
+        elseif desired_state == game_states.level3 then
+            change_music(music_states.factory)
+        elseif desired_state == game_states.level4 then
+            -- todo speed up this
+            change_music(music_states.factory)
+        end
+
+        -- -- temp for now to enjoy all musics
+        -- music_randomizer = rnd(10)
+        -- if music_randomizer < 2 then
+        --     change_music(music_states.city)
+        -- elseif music_randomizer < 4 then
+        --     change_music(music_states.dungeon)
+        -- elseif music_randomizer < 6 then
+        --     change_music(music_states.factory)
+        -- elseif music_randomizer < 8 then
+        --     change_music(music_states.miniboss)
+        -- else
+        --     change_music(music_states.final_boss)
+        -- end
+
+        state = next_state
+    elseif desired_state == game_states.splash then
         state = game_states.splash
+        change_music(music_states.splash_screen)
+    elseif desired_state == game_states.lose_screen then
+        state = game_states.lose_screen
+        change_music(music_states.lose_screen)
+    elseif desired_state == game_states.win_screen then
+        state = game_states.win_screen
+        change_music(music_states.win_screen)
+    else 
+        -- unrecognized state
+        throw("unrecogonized state") 
     end
+end
+
+
+function is_battle_state(desired_state)
+    return desired_state == game_states.level1 or desired_state == game_states.level2 
+      or desired_state == game_states.level3 or desired_state == game_states.level4
 end
 
 --------------------------------------------------------------------------------
@@ -145,6 +203,11 @@ function move_player()
   idle()
 
   if btn(3) then
+    if outter == 9 then
+        play_sound_effect(sound_effects.shield_activate)
+    elseif outter < 8.8 and outter > 0then
+        play_sound_effect(sound_effects.shield_hold)
+    end
     if outter > 0 and inner  > 0 then
         blocking = true
     else blocking = false
@@ -246,7 +309,7 @@ function move_player()
   player.time+=1
 
   if player.hearts == 0 or player.y >= 180 then
-    change_state()
+    change_state(game_states.lose_screen)
   end
 
   handle_combo()
@@ -296,6 +359,7 @@ function obs_collision(obj1, obj2)
 
           if obj2.hearts > 0 then
             taking_damage = true
+            play_sound_effect(sound_effects.player_damaged)
             camera(cos(t/3), cos(t/2))
             obj2.hearts -= 1
           end
@@ -312,6 +376,7 @@ function obs_collision(obj1, obj2)
             f.x += 6.5
         end
         f.health -= obj2.combo.dmg
+        play_sound_effect(sound_effects.enemy_damaged)
         if f.health <= 0 then
             del(obj1, f)
         end
@@ -416,21 +481,32 @@ end
 function _update60()
     if state == game_states.splash then
         update_splash()
-    elseif state == game_states.game then
+    elseif state == game_states.loading_screen then
+        update_loading()
+    elseif is_battle_state(state) then
         update_game()
-    elseif state == game_states.gameover then
+    elseif state == game_states.lose_screen then
         update_gameover()
+    elseif state == game_states.win_screen then
+        update_win()
     end
 end
 
 function _draw()
     cls()
+
     if state == game_states.splash then
         draw_splash()
-    elseif state == game_states.game then
+    elseif state == game_states.loading_screen then
+        draw_loading()
+    elseif is_battle_state(state) then
         draw_game()
-    elseif state == game_states.gameover then
+    elseif state == game_states.lose_screen then
         draw_gameover()
+    elseif state == game_states.win_screen then
+        draw_win()
+    else
+        assert("unknown scene to draw") -- throw aerror
     end
 end
 
@@ -509,7 +585,7 @@ function walk_ninja(ninja)
     elseif(t % 10 == 0 and ninja.sprite != 71) then
       ninja.sprite = ninja.sprite + 1
     elseif(t % 10 == 0 and ninja.sprite == 71) then
-      sfx(55, 3) -- play walking sound
+      play_sound_effect(sound_effects.footstep)
       ninja.sprite = 67
     end
   end
@@ -518,7 +594,7 @@ end
 function throw_ninja(ninja)
   	if(ninja.is_throwing == true) then
     if(ninja.throw_timer == 0) then -- spawn a shuriken once animation finishes
-            sfx(59, 3)
+            play_sound_effect(sound_effects.ninja_throw)
   			if(ninja.flip) then -- facing right
   				create_obs(shuriken, 79, ninja.x+4, ninja.y-10, -1)
   			else -- facing left
@@ -575,8 +651,8 @@ end
 
 function update_splash()
     -- usually we want the player to press one button
-     if btn(5) then
-         change_state()
+     if btnp(5) then
+         change_state(game_states.level1)
      end
      t+= 1
 end
@@ -611,6 +687,38 @@ function draw_splash()
     local text = "press x to play"
     write(text, text_x_pos(text), 72,7)
   end
+end
+
+-- loading
+
+function update_loading()
+    -- after enough time has passed, move on to the level
+     if time() > loading_end_time then
+         change_state(next_state)
+     end
+end
+
+function draw_loading()
+    rectfill(0,0,screen_size,screen_size,0)
+    local level_name = ""
+    local level_description = ""
+    if next_state == game_states.level1 then
+        level_name = "episode 1:"
+        level_description = "\146save the city, sailor v!\146"
+    elseif next_state == game_states.level2 then
+        level_name = "episode 2:"
+        level_description = "\146escape the dungeon, sailor v!!\146"
+    elseif next_state == game_states.level3 then
+        level_name = "episode 3:"
+        level_description = "\146beat the evil boss, sailor v!\146"
+    elseif next_state == game_states.level3 then
+        level_name = "episode 4:"
+        level_description = "\146escape the factory, sailor v!\146"
+    else
+        throw("unknown level")
+    end
+    write(level_name, text_x_pos(level_name), 50,7)
+    write(level_description, text_x_pos(level_description), 64,7)
 end
 
 -- game
@@ -693,10 +801,29 @@ end
 -- game over
 
 function update_gameover()
+     if btnp(5) then
+         change_state(game_states.splash)
+     end
 end
 
 function draw_gameover()
+    local text = "c'est la vie..."
+    local restart_text = "press x to restart"
+    write(text, text_x_pos(text), 50,7)
+    write(restart_text, text_x_pos(restart_text), 64,7)
 end
+
+-- win
+function update_win()
+
+end
+
+function draw_win()
+    local text = "c'est la vie..."
+    write(text, text_x_pos(text), 50,7)
+end
+
+
 
 function draw_player()
   if(taking_damage) then
@@ -1162,8 +1289,8 @@ __sfx__
 0118000024550245500050024550235502355000500235502355023550215502155018500215501f5501d5501f5501f5501d5501d5501c5501a5501a55018550185501850018500185001850015550185501c550
 011800080c605000051c6350000510605000051c63500005106050000500005000050000500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 01240020155551855515555185551555518555155551855510555175551355517555105551755513555175551055517555135551755510555175551355517555155551c555185551c555155551c555185551c555
-010c0000155001850015500185001550018500155001850010500175001350017500105001750013500175001050017500135001750010500175001350017500155001c500185001c500155001c500185001c500
-012000000b57000000105700000015570000001a570000001f5701c600245701d6001d6001f000000001c0001c000000001d0001d000000002100000000000000000000000000000000000000000000000000000
+01080000155001850015500185001550018500155001850010500175001350017500105001750013500175001050017500135001750010500175001350017500155001c500185001c500155001c500185001c500
+011200000b5700b570105701057015570155701a5701a5701f5701f570245701d6001f000000001c0001c000000001d0001d00000000210000000000000000000000000000000000000000000000000000000000
 0116000028120241002b1002612028120261202410026120261202312026120281202d120241002b120241002812024100241002612028120231202112021120211201a1201d1202112023120181002612000100
 01160000101500010010635001001015000100106350e1500e1502d100106352b100151501063513150106351015021100106351a1001015000100106350e1500e1500010010635000000b150106350e15010635
 011600001550000000106350000015500000001063511500115000000010635000001850010635106350000000000000001063500000000000000010635000000000000000106350000000000106351063500000
@@ -1224,7 +1351,7 @@ __music__
 01 00010444
 02 02030444
 03 05424344
-00 06074344
+04 46074344
 00 0a094c4e
 01 0a090b4e
 00 080b094d
@@ -1259,9 +1386,9 @@ __music__
 00 41424344
 00 41424344
 01 2d313276
-00 2e353444
+00 2e313444
 00 2f313244
-00 30313344
+04 30313344
 01 1f5d5f60
 00 1d5d5f60
 01 5f4a1f20
