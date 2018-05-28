@@ -287,10 +287,17 @@ function move_player()
   --end
 
   -- player jumping
-  if (btn(2) and player.isgrounded) then
-      play_sound_effect(sound_effects.player_jump) -- play jump sound
-    player.dy-=4
-  end
+  if (btn(2)) then
+        if jumplast == false then
+        jumplast = true
+        if player.isgrounded then
+            play_sound_effect(sound_effects.player_jump) -- play jump sound
+        player.dy-=4
+        end
+        end
+else
+  jumplast = false
+      end
 
   -- x friction
   player.dx*=0.8
