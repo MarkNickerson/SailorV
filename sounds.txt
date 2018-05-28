@@ -1,48 +1,37 @@
 Sounds:
-63 health pickup
-60, 61, 62 Hit
-59 ninja throw
-58 player hit 
-57 enemy hit
-55 step/run
+63 (0-8) health pickup
+60 (0,1,2 [finisher]) Hit
+59 (0-4) ninja throw (8-14) jump
+58 (0-8) player shield activate
+57 (0-4) player damaged (8-11) enemy damaged 
+55 (0)   step
+54 (0-6) shield hold
+blockedhit?
+explosition 
 
 
-
+SFX:
+0-4 Title Screen
+5 Death screen
+7 PreLevel theme
+8-13 Level1 Theme
+14-18 and 28 Level2 Theme
+19-27 Miniboss
+29-33 and 53 Final boss
+34-44 Level3
+45-52 ending theme
+54-64 SFX
 
 Music Patterns:
-0 - 2 Title screen (Moon light Densetsu)
-3 - 3 You Lose
-4 - 10 Level 1 City (Moonlight prism power, make up!) 
-11 - 18 Level 2 Dungeon (Youma Attack)
-19 - 23 Mini Boss battle
-25 - 30 Level 3 Factory
-32 - 37 Final Boss battle
-37 - 40 Victory  theme 
-
-
-
-
-Level songs should be about 6 patterns
-Boss Battles about 3
-
-
-Potential dungeon: 
-https://www.youtube.com/watch?v=ow0QaMH-pSk&list=PL3CRUt-GCCPPpiB0sVqNxUzbNQQkoZsn1&index=17
-
-https://www.youtube.com/watch?v=YhGrgfjVYfU&list=PL3CRUt-GCCPPpiB0sVqNxUzbNQQkoZsn1&index=30
-
-
-Potential Factory:
-
-https://www.youtube.com/watch?v=DJFuGbXEMEk&list=PL3CRUt-GCCPPpiB0sVqNxUzbNQQkoZsn1&index=7
-
-
-Potential Boss Battle:
-https://www.youtube.com/watch?v=MWxJgokMkAQ&index=48&list=PL3CRUt-GCCPPpiB0sVqNxUzbNQQkoZsn1
-
-
-Potential Ending theme:
-https://www.youtube.com/watch?v=q1gJtz9MAU4&index=64&list=PL3CRUt-GCCPPpiB0sVqNxUzbNQQkoZsn1
+0 - 1 Title screen (Moon light Densetsu)
+2 - 2 You Lose
+3 - 3 Level start
+4 - 9 Level 1 City (Moonlight prism power, make up!)
+10 - 19 Level 2 Dungeon
+20 - 25 Mini Boss battle
+26 - 33 Level 3 Factory
+41 - 46 Final Boss battle
+37 - 39 Ending theme 
 
 
 ???:
