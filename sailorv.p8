@@ -136,6 +136,22 @@ function kick()
 
   -- play non finishing punch sound
   play_sound_effect(sound_effects.player_punch)
+  
+  if actor.flp == true then
+    if player.x-4 <= 0  or (solid(player, player.x-4, player.y-0.5)) then
+      player.x = player.x
+    else
+      player.x -= 4
+    end
+  else
+    if (solid(player, player.x+4, player.y-0.5)) then
+      player.x = player.x
+    else
+    player.x += 4
+    end
+  end
+
+  obs_collision(allninjas, player)
 end
 
 function punch()
@@ -946,30 +962,35 @@ left.left.sprt = 5
 left.left.dmg = 1
 left.right = {}
 left.right.attac = "ab"
+left.right.dmg = 2
 left.left.left = {}
 left.left.left.attac = "aaa"
 left.left.left.sprt = 4
 left.left.left.dmg = 1
 left.left.right = {}
 left.left.right.attac = "aab"
+left.left.right.dmg = 2
 left.right.left = {}
 left.right.left.attac = "aba"
 left.right.left.sprt = 5
 left.right.left.dmg = 1
 left.right.right = {}
 left.right.right.attac = "abb"
+left.right.right.dmg = 2
 left.left.left.left = {}
 left.left.left.left.attac="aaaa"
 left.left.left.left.sprt = 5
 left.left.left.left.dmg = 3
 left.left.left.right = {}
 left.left.left.right.attac="aaab"
+left.left.left.right.dmg = 6
 left.left.right.left = {}
 left.left.right.left.attac="aaba"
 left.left.right.left.sprt = 4
 left.left.right.left.dmg = 3
 left.left.right.right = {}
 left.left.right.right.attac="aabb"
+left.left.right.right.dmg = 6
 left.left.right.right.sprt = 10
 left.right.left.left = {}
 left.right.left.left.attac="abaa"
@@ -977,12 +998,14 @@ left.right.left.left.sprt = 4
 left.right.left.left.dmg = 3
 left.right.left.right = {}
 left.right.left.right.attac="abab"
+left.right.left.right.dmg = 6
 left.right.right.left = {}
 left.right.right.left.attac="abba"
 left.right.right.left.sprt = 5
 left.right.right.left.dmg = 3
 left.right.right.right = {}
 left.right.right.right.attac="abbb"
+left.right.right.right.dmg = 6
 
 
 right.left = {}
@@ -991,42 +1014,49 @@ right.left.sprt = 4
 right.left.dmg = 1
 right.right = {}
 right.right.attac = "bb"
+right.right.dmg = 2
 right.left.left = {}
 right.left.left.attac = "baa"
 right.left.left.sprt = 5
 right.left.left.dmg = 1
 right.left.right = {}
 right.left.right.attac = "bab"
+right.left.dmg = 2
 right.right.left = {}
 right.right.left.attac = "bba"
 right.right.left.sprt = 4
 right.right.left.dmg = 1
 right.right.right = {}
 right.right.right.attac = "bbb"
+right.right.right.dmg = 2
 right.left.left.left = {}
 right.left.left.left.attac="baaa"
 right.left.left.left.sprt = 4
 right.left.left.left.dmg = 3
 right.left.left.right = {}
 right.left.left.right.attac="baab"
+right.left.left.right.dmg = 6
 right.left.right.left = {}
 right.left.right.left.attac="baba"
 right.left.right.left.sprt = 5
 right.left.right.left.dmg = 3
 right.left.right.right = {}
 right.left.right.right.attac="babb"
+right.left.right.right.dmg = 6
 right.right.left.left = {}
 right.right.left.left.attac="bbaa"
 right.right.left.left.sprt = 5
 right.right.left.left.dmg = 3
 right.right.left.right = {}
 right.right.left.right.attac="bbab"
+right.right.left.right.dmg = 6
 right.right.right.left = {}
 right.right.right.left.attac="bbba"
 right.right.right.left.sprt = 4
 right.right.right.left.dmg = 3
 right.right.right.right = {}
 right.right.right.right.attac="bbbb"
+right.right.right.right.dmg = 6
 -->8
 --music stuff
 
@@ -1156,8 +1186,8 @@ __gfx__
 00f777000001110000f777f0000111000011100000077700001110000011100a0af777f00af777f0000111000011111001111ff8000000000000000000000000
 000111000011111000011100001111100111100000011110011110000111100a00011100000111000011111001111ff011111000000000000000000000000000
 00111100000f00f000111100000f0f0000ffff000011111000f0f00000f0f00a0011110000111100000f00f000fff8000f000000000000000000000000000000
-000ff00000f00800000f0f00008000f08ff00f00000f00f00f00f0000f00f0a0000f0f00000f0f0000f0080000f0800000f00000000000000000000000000000
-0008800000800000000808000000008008000880008000800800800008008a000008080000080800008000000080000000800000000000000000000000000000
+000ff00000f00800000f0f00008000f08ff00f00000f00f00f00f0000f00f0a0000f0f00000f0f0000f0080000f080000f000000000000000000000000000000
+0008800000800000000808000000008008000880008000800800800008008a000008080000080800008000000080000080000000000000000000000000000000
 5555555577777777777776777777777708800880055005507666666d000000000000000000000000000000000007777777777000000000000000000000000000
 5999999566666666666665667677777d888887885555575565555552000000000000000000000000000000000006555555556000000000000000000000000000
 594444454441444159444445766777d6888888785555557565222552000000000000000000000000000000000075999999995700000000000000000000000000
