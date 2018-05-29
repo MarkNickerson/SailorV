@@ -845,6 +845,7 @@ function init_game()
 	player = make_player(20,1)
   -- location to spawn first ninja
   ninjaspawn = 0
+  make_ninja(469, 0) -- because dan wanted a ninja here
   brawl_spawn = false
   brawl_clear = true
 
