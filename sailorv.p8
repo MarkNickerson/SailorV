@@ -569,7 +569,7 @@ function make_ninja(x,y)
     dx=0,
     dy=0,
     max_dx=.2,             -- max x speed
-    p_speed=0.05,         -- acceleration force
+    p_speed=0.02 + (rnd(0.075)),         -- acceleration force
     drag=0.02,            -- drag force
     gravity=0.15,         -- gravity
     flip = false,		-- false == left facing, true == right facing
@@ -577,7 +577,7 @@ function make_ninja(x,y)
     sprite = 67,
     is_throwing = false,
     is_walking = true,
-    throw_mod = 200 + flr(rnd(100)),
+    throw_mod = 250 + flr(rnd(150)),
     throw_timer = 0,
     hearts = 5
   }
@@ -609,7 +609,7 @@ function throw_ninja(ninja)
   			end
   			ninja.is_throwing = false
         ninja.is_walking = true
-  			ninja.throw_mod = 200 + flr(rnd(100))
+  			ninja.throw_mod = 250 + flr(rnd(200))
   			ninja.sprite = 67
   		elseif(ninja.throw_timer > 13) then
   			ninja.sprite = 65
@@ -732,18 +732,20 @@ end
 
 function init_game()
 	player = make_player(20,1)
-	ninja = make_ninja(100,100)
-  ninja = make_ninja(150,100)
-  ninja = make_ninja(200,100)
+  -- location to spawn first ninja
+  ninjaspawn = 0
 end
 
 function update_game()
-
+  -- spawn more ninjas at randomized x locations
+  if(player.x >= ninjaspawn) then
+    make_ninja(player.x + 100, 0)
+    ninjaspawn += 50
+    ninjaspawn += flr(rnd(200))
+  end
   foreach(shuriken, update_shuriken)
-  --move_player()
   move_actor(player)
   foreach(allninjas, move_actor)
-  --move_actor(ninja)
 
   t+= 1
 end
@@ -818,6 +820,14 @@ function draw_gameover()
     local restart_text = "press x to restart"
     write(text, text_x_pos(text), 50,7)
     write(restart_text, text_x_pos(restart_text), 64,7)
+    -- deletes ninjas and shurikens
+    for obj in all(allninjas) do 
+      del(allninjas, obj)
+    end
+    for obj in all(shuriken) do
+      del(shuriken, obj)
+    end
+
 end
 
 -- win
@@ -1160,7 +1170,7 @@ __gfx__
 00000000000000000000000000000000005550000000000000000000005550000000000000000000000000000000000000000000000000000000000000000000
 00555000005550880000000800555000088888000055500000555000088888000055500000000000000000000000000000000000000000000000000000000600
 088888000888880000055508088888000f4f558008888800088888000f4f55800888880000000000000000000000000000000000000000000000000000006600
-0f0f05800f455500008888800f4f55800fff55800f4f55880f4f55800fff55800f4f558800000000000000000000000000000000000000000000000006677700
+0f4f45800f455500008888800f4f55800fff55800f4f55880f4f55800fff55800f4f558800000000000000000000000000000000000000000000000006677700
 0ffff5800ff5550000f4f4500fff5580055555000fff55000fff5508055555000fff550000000000000000000000000000000000000000000000000000670760
 055555000555550500ffff5005555500005850000555550005555500005850000555550000000000000000000000000000000000000000000000000000077766
 00555000005550505055555000585000008650000058500000585000008650000058500000000000000000000000000000000000000000000000000000066000
