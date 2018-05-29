@@ -32,7 +32,10 @@ loading_end_time = 0 -- keeps track of when loading screen ends automatically
 loading_time = 5 -- wait about 5 seconds before advancing
 
 function change_state(desired_state)
-    cls()
+  cls()
+  camera(0,0)
+  cam.x = 0
+  cam.y = 0
     -- if loading a level that's not the win, lose, or splash screen, show the loading screen before hand
     -- change music based on desired scene as well
     if state != game_states.loading_screen and is_battle_state(desired_state) then
@@ -136,7 +139,7 @@ function kick()
 
   -- play non finishing punch sound
   play_sound_effect(sound_effects.player_punch)
-  
+
   if actor.flp == true then
     if player.x-4 <= 0  or (solid(player, player.x-4, player.y-0.5)) then
       player.x = player.x
@@ -370,7 +373,7 @@ function solid(obs, x, y)
     else
       return false
     end
-  elseif (obs.tag == 3) then
+  elseif (obs.tag == 3) or (obs.tag == 4) then
     if (fget(mget(tilex1, tiley1), 1)) then
       return true
     else
@@ -381,12 +384,19 @@ end
 
 function obs_collision(obj1, obj2)
   for f in all(obj1) do
-    if obj1.tag == 3 then
+    if obj1.tag == 4 then
+      if((f.y <= obj2.y) and (f.y >= obj2.y-16)) and ((f.x <= obj2.x+3) and (f.x >= obj2.x-3)) then
+        if obj2.hearts < 3 then
+          play_sound_effect(sound_effects.health_pickup)
+          obj2.hearts += 1
+          del(obj1, f)
+        end
+      end
+    elseif obj1.tag == 3 then
       if((f.y <= obj2.y) and (f.y >= obj2.y-16)) and ((f.x <= obj2.x+3) and (f.x >= obj2.x-3)) then
 
         del(obj1, f)
         if blocking == false then
-
           if obj2.hearts > 0 then
             taking_damage = true
             play_sound_effect(sound_effects.player_damaged)
@@ -398,6 +408,7 @@ function obs_collision(obj1, obj2)
           inner -= 1
         end
       end
+
     elseif obj1.tag == 2 then
       if((f.y <= obj2.y+8) and (f.y >= obj2.y-8)) and ((f.x <= obj2.x+8) and (f.x >= obj2.x-8)) then
         if actor.flp == true then
@@ -410,11 +421,8 @@ function obs_collision(obj1, obj2)
         if f.health <= 0 then
             del(obj1, f)
         end
-
       end
     end
-      --sound effect
-
 
     if (f.x<=0) del(obj1, f)
   end
@@ -504,7 +512,7 @@ function _init()
     t = 0
     taking_damage = false
     cls()
-    --camera(0, 0)
+    camera(0, 0)
     change_music(music_states.splash_screen)
 end
 
@@ -540,6 +548,21 @@ function _draw()
     end
 end
 
+health_pack = {
+  tag = 4
+}
+
+function update_health_pack(obj)
+  obs_collision(health_pack, player)
+  if not solid(obj, obj.x, obj.y+8) then
+    obj.y += 2 * obj.dx
+  else
+    if (t%25 == 0) then
+      obj.y = obj.y-1
+    end
+  end
+end
+
 
 ------------------------------------------------ enemies
 shuriken = {
@@ -551,13 +574,18 @@ allninjas = {
 }
 
 function update_shuriken(obj)
+  if t - obj.birthdate >= 500 then
+    del(shuriken, obj)
+  end
+
+  obs_collision(shuriken, player)
 	if(t % 6 == 0) then
     if solid(obj, obj.x, obj.y) then
       obj.x = obj.x
       obj.flip = false
     else
       obj.x -= 8 * obj.dx
-      obs_collision(shuriken, player)
+
     end
 		if(obj.flip == true) then
 			obj.flip = false
@@ -571,7 +599,7 @@ function draw_obj(obj)
   	spr(obj.sprite, obj.x, obj.y, 1, 1, obj.flip)
 end
 
-function create_obs(obj, sprite, x, y, dx)
+function create_obs(obj, sprite, x, y, dx, tag)
   -- empty table to fill with below values
   local o = {}
   o.x = x
@@ -579,6 +607,8 @@ function create_obs(obj, sprite, x, y, dx)
   o.dx = dx
   o.sprite = sprite
   o.flip = false
+  o.tag = tag
+  o.birthdate = t
 
   add(obj, o)
   return o
@@ -757,6 +787,10 @@ function init_game()
 	player = make_player(20,1)
   -- location to spawn first ninja
   ninjaspawn = 0
+
+  create_obs(health_pack, 39, 180, 4, 1, 4)
+  create_obs(health_pack, 39, 400, 4, 1, 4)
+  create_obs(health_pack, 39, 500, 4, 1, 4)
 end
 
 function update_game()
@@ -767,6 +801,7 @@ function update_game()
     ninjaspawn += flr(rnd(200))
   end
   foreach(shuriken, update_shuriken)
+  foreach(health_pack, update_health_pack)
   move_actor(player)
   foreach(allninjas, move_actor)
 
@@ -807,7 +842,8 @@ function draw_game()
 
   map(0, 0, 0, 0, 128, 32)
   foreach(allninjas, draw_ninja)
-  	foreach(shuriken, draw_obj)
+  foreach(shuriken, draw_obj)
+  foreach(health_pack, draw_obj)
   if(blocking == true) then
     if actor.flp == true then
       circfill(player.x+4, player.y-8, outter, 10)
@@ -849,6 +885,9 @@ function draw_gameover()
     end
     for obj in all(shuriken) do
       del(shuriken, obj)
+    end
+    for obj in all(health_pack) do
+      del(health_pack, obj)
     end
 
 end
@@ -1449,4 +1488,3 @@ __music__
 00 1e1d5f44
 00 211f4344
 02 1d354344
-
