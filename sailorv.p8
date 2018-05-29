@@ -350,8 +350,6 @@ function solid(obs, x, y)
   elseif (obs.tag == 3) then
     if (fget(mget(tilex1, tiley1), 1)) then
       return true
-    elseif (fget(mget(tilex1, tiley1), 2)) then
-      return true
     else
       return false
     end
@@ -363,8 +361,7 @@ function obs_collision(obj1, obj2)
     if obj1.tag == 3 then
       if((f.y <= obj2.y) and (f.y >= obj2.y-16)) and ((f.x <= obj2.x+3) and (f.x >= obj2.x-3)) then
 
-        --del(obj1, f)
-        f.active = false
+        del(obj1, f)
         if blocking == false then
 
           if obj2.hearts > 0 then
@@ -530,7 +527,6 @@ allninjas = {
   tag = 2
 }
 
-
 function update_shuriken(obj)
 	if(t % 6 == 0) then
     if solid(obj, obj.x, obj.y) then
@@ -560,8 +556,6 @@ function create_obs(obj, sprite, x, y, dx)
   o.dx = dx
   o.sprite = sprite
   o.flip = false
-  o.active = true
-  o.timer = 100
 
   add(obj, o)
   return o
@@ -807,7 +801,7 @@ function draw_game()
 	print('combo:'..player.combo.attac,cam.x,0,7)
 	print('combo timer:'..player.combotimer,cam.x,8,7)
 	print(player.incombo,cam.x,16,7)
-  print(player.x,cam.x + 5,24,0)
+  print(player.dy,cam.x + 5,24,0)
   draw_hearts()
   camera(0,0)
 end
