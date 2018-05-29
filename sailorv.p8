@@ -350,6 +350,8 @@ function solid(obs, x, y)
   elseif (obs.tag == 3) then
     if (fget(mget(tilex1, tiley1), 1)) then
       return true
+    elseif (fget(mget(tilex1, tiley1), 2)) then
+      return true
     else
       return false
     end
@@ -361,7 +363,8 @@ function obs_collision(obj1, obj2)
     if obj1.tag == 3 then
       if((f.y <= obj2.y) and (f.y >= obj2.y-16)) and ((f.x <= obj2.x+3) and (f.x >= obj2.x-3)) then
 
-        del(obj1, f)
+        --del(obj1, f)
+        f.active = false
         if blocking == false then
 
           if obj2.hearts > 0 then
@@ -527,6 +530,7 @@ allninjas = {
   tag = 2
 }
 
+
 function update_shuriken(obj)
 	if(t % 6 == 0) then
     if solid(obj, obj.x, obj.y) then
@@ -556,6 +560,8 @@ function create_obs(obj, sprite, x, y, dx)
   o.dx = dx
   o.sprite = sprite
   o.flip = false
+  o.active = true
+  o.timer = 100
 
   add(obj, o)
   return o
@@ -569,7 +575,7 @@ function make_ninja(x,y)
     dx=0,
     dy=0,
     max_dx=.2,             -- max x speed
-    p_speed=0.05 + (rnd(0.20)),         -- acceleration force
+    p_speed=0.02 + (rnd(0.075)),         -- acceleration force
     drag=0.02,            -- drag force
     gravity=0.15,         -- gravity
     flip = false,		-- false == left facing, true == right facing
@@ -577,7 +583,7 @@ function make_ninja(x,y)
     sprite = 67,
     is_throwing = false,
     is_walking = true,
-    throw_mod = 250 + flr(rnd(200)),
+    throw_mod = 250 + flr(rnd(150)),
     throw_timer = 0,
     hearts = 5
   }
@@ -609,7 +615,7 @@ function throw_ninja(ninja)
   			end
   			ninja.is_throwing = false
         ninja.is_walking = true
-  			ninja.throw_mod = 200 + flr(rnd(100))
+  			ninja.throw_mod = 250 + flr(rnd(200))
   			ninja.sprite = 67
   		elseif(ninja.throw_timer > 13) then
   			ninja.sprite = 65
@@ -732,13 +738,17 @@ end
 
 function init_game()
 	player = make_player(20,1)
-	ninja = make_ninja(100,100)
-  ninja = make_ninja(150,100)
-  ninja = make_ninja(200,100)
+  -- location to spawn first ninja
+  ninjaspawn = 0
 end
 
 function update_game()
-
+  -- spawn more ninjas at randomized x locations
+  if(player.x >= ninjaspawn) then
+    make_ninja(player.x + 100, 0)
+    ninjaspawn += 50
+    ninjaspawn += flr(rnd(200))
+  end
   foreach(shuriken, update_shuriken)
   move_actor(player)
   foreach(allninjas, move_actor)
@@ -797,7 +807,7 @@ function draw_game()
 	print('combo:'..player.combo.attac,cam.x,0,7)
 	print('combo timer:'..player.combotimer,cam.x,8,7)
 	print(player.incombo,cam.x,16,7)
-  print(player.dy,cam.x + 5,24,0)
+  print(player.x,cam.x + 5,24,0)
   draw_hearts()
   camera(0,0)
 end
@@ -816,6 +826,7 @@ function draw_gameover()
     local restart_text = "press x to restart"
     write(text, text_x_pos(text), 50,7)
     write(restart_text, text_x_pos(restart_text), 64,7)
+    -- deletes ninjas and shurikens
     for obj in all(allninjas) do 
       del(allninjas, obj)
     end
