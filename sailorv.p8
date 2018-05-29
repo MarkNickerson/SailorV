@@ -396,7 +396,7 @@ end
 function obs_collision(obj1, obj2)
   for f in all(obj1) do
     if obj1.tag == 4 then
-      if((f.y <= obj2.y) and (f.y >= obj2.y-16)) and ((f.x <= obj2.x+3) and (f.x >= obj2.x-3)) then
+      if((f.y <= obj2.y) and (f.y >= obj2.y-16)) and ((f.x <= obj2.x+4) and (f.x >= obj2.x-4)) then
         if obj2.hearts < 3 then
           play_sound_effect(sound_effects.health_pickup)
           obj2.hearts += 1
@@ -404,7 +404,7 @@ function obs_collision(obj1, obj2)
         end
       end
     elseif obj1.tag == 3 then
-      if((f.y <= obj2.y) and (f.y >= obj2.y-16)) and ((f.x <= obj2.x+3) and (f.x >= obj2.x-3)) then
+      if((f.y <= obj2.y) and (f.y >= obj2.y-16)) and ((f.x <= obj2.x+4) and (f.x >= obj2.x-4)) then
 
         del(obj1, f)
         if blocking == false then
