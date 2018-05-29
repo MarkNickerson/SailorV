@@ -206,7 +206,7 @@ function make_player(x,y)
     dx=0,
     dy=0,
     gravity=0.15,
-    combotimer = 60,
+    combotimer = 30,
     kicktimer = 10,
     incombo = false,
     last = false,
@@ -246,14 +246,14 @@ function move_player()
   elseif btn(4) or btn(5) then
     if player.last == false then
       --do the thing here
-      player.combotimer = 60
+      player.combotimer = 30
  			player.incombo = true
  			player.last = true
 
       if btn(4) then
         if #player.combo.attac == 4 then
           player.combo = root.left
-          player.combotimer=60
+          player.combotimer=30
         else
           player.combo = player.combo.left
         end
@@ -265,7 +265,7 @@ function move_player()
       if btn(5) then
             if #player.combo.attac == 4 then
                 player.combo = root.right
-                player.combotimer=60
+                player.combotimer=30
             else
                 player.combo = player.combo.right
             end
@@ -366,7 +366,7 @@ function handle_combo()
 		end
 
 		if player.combotimer==0 then
-			player.combotimer=60
+			player.combotimer=30
 			player.incombo = false
 			player.combo = root
 		end
