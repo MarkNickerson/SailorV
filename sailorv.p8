@@ -142,16 +142,16 @@ function kick()
   play_sound_effect(sound_effects.player_punch)
 
   if actor.flp == true then
-    if player.x-4 <= 0  or (solid(player, player.x-4, player.y-0.5, 1)) then
+    if player.x-4 <= 0  or (solid(player, player.x-6, player.y-0.5, 1)) then
       player.x = player.x
     else
-      player.x -= 4
+      player.x -= 6
     end
   else
-    if (solid(player, player.x+4, player.y-0.5, 1)) then
+    if (solid(player, player.x+6, player.y-0.5, 1)) then
       player.x = player.x
     else
-    player.x += 4
+    player.x += 6
     end
   end
 
@@ -207,7 +207,8 @@ function make_player(x,y)
     dx=0,
     dy=0,
     gravity=0.15,
-    combotimer = 60,
+    combotimer = 30,
+    kicktimer = 10,
     incombo = false,
     last = false,
     combo = root,
@@ -238,22 +239,22 @@ function move_player()
         blocking = true
     else blocking = false
     end
-    outter -= .01
-    inner -= .01
+    outter -= .05
+    inner -= .05
     block()
 
     -- player control
   elseif btn(4) or btn(5) then
     if player.last == false then
       --do the thing here
-      player.combotimer = 60
+      player.combotimer = 30
  			player.incombo = true
  			player.last = true
 
       if btn(4) then
         if #player.combo.attac == 4 then
           player.combo = root.left
-          player.combotimer=60
+          player.combotimer=30
         else
           player.combo = player.combo.left
         end
@@ -261,20 +262,30 @@ function move_player()
 
       end
 
+    if player.kicktimer == 10 then
       if btn(5) then
-        if #player.combo.attac == 4 then
-          player.combo = root.right
-          player.combotimer=60
-        else
-          player.combo = player.combo.right
+            if #player.combo.attac == 4 then
+                player.combo = root.right
+                player.combotimer=30
+            else
+                player.combo = player.combo.right
+            end
+            kick()
+            player.kicktimer -= 1
         end
-        kick()
-      end
+    end
+
     end
     else player.last = false
     blocking = false
     outter = 9
     inner = 6
+    if player.kicktimer < 10 then
+            player.kicktimer -= 1
+        if player.kicktimer <=  0 then
+            player.kicktimer = 10
+            end
+      end
     -- move player left
     if (btn(0)) then
       player.dx = player.dx - accel
@@ -360,7 +371,7 @@ function handle_combo()
 		end
 
 		if player.combotimer==0 then
-			player.combotimer=60
+			player.combotimer=30
 			player.incombo = false
 			player.combo = root
 		end
@@ -390,7 +401,7 @@ end
 function obs_collision(obj1, obj2)
   for f in all(obj1) do
     if obj1.tag == 4 then
-      if((f.y <= obj2.y) and (f.y >= obj2.y-16)) and ((f.x <= obj2.x+3) and (f.x >= obj2.x-3)) then
+      if((f.y <= obj2.y) and (f.y >= obj2.y-16)) and ((f.x <= obj2.x+4) and (f.x >= obj2.x-4)) then
         if obj2.hearts < 3 then
           play_sound_effect(sound_effects.health_pickup)
           obj2.hearts += 1
@@ -398,7 +409,7 @@ function obs_collision(obj1, obj2)
         end
       end
     elseif obj1.tag == 3 then
-      if((f.y <= obj2.y) and (f.y >= obj2.y-16)) and ((f.x <= obj2.x+3) and (f.x >= obj2.x-3)) then
+      if((f.y <= obj2.y) and (f.y >= obj2.y-16)) and ((f.x <= obj2.x+4) and (f.x >= obj2.x-4)) then
 
         del(obj1, f)
         if blocking == false then
@@ -409,8 +420,8 @@ function obs_collision(obj1, obj2)
             obj2.hearts -= 1
           end
         else
-        	outter -= 1
-          inner -= 1
+        	outter -= 4
+          inner -= 4
         end
       end
 
@@ -632,7 +643,7 @@ function make_ninja(x,y)
     drag=0.02,            -- drag force
     gravity=0.15,         -- gravity
     flip = false,		-- false == left facing, true == right facing
-    health = 5,
+    health = 20,
     sprite = 67,
     is_throwing = false,
     is_walking = true,
@@ -1114,7 +1125,7 @@ right.left.left.sprt = 5
 right.left.left.dmg = 1
 right.left.right = {}
 right.left.right.attac = "bab"
-right.left.dmg = 2
+right.left.right.dmg = 2
 right.right.left = {}
 right.right.left.attac = "bba"
 right.right.left.sprt = 4
