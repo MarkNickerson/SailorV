@@ -471,6 +471,7 @@ function obs_collision(obj1, obj2)
 end
 
 function reset_checkpoint()
+  play_sound_effect(sound_effects.level_start)
   player.hearts = 3
   player.x = cur_checkpoint.x
   player.y = cur_checkpoint.y
@@ -1006,7 +1007,7 @@ function draw_game()
  -- print(player.incombo,cam.x,16,7)
   -- print(brawl_clear, cam.x + 5,24,0)
   -- print(brawl_spawn,cam.x + 5,32,0)
-   print(player.x,cam.x + 5,40,0)
+   --print(player.x,cam.x + 5,40,0)
   -- print(enemycount,cam.x + 5,48,0)
   draw_hearts()
   draw_lives()
@@ -1347,16 +1348,17 @@ music_states = {
 }
 
 sound_effects = {
-   shield_activate = 0,
-   player_attack = 1,
-   player_damaged = 2,
-   ninja_throw = 3,
-   enemy_damaged = 4,
-   player_jump = 5,
-   footstep = 6,
-   shield_hold = 7,
-   health_pickup = 8,
-   checkpoint = 9,
+  shield_activate = 0,
+  player_attack = 1,
+  player_damaged = 2,
+  ninja_throw = 3,
+  enemy_damaged = 4,
+  player_jump = 5,
+  footstep = 6,
+  shield_hold = 7,
+  health_pickup = 8,
+  checkpoint = 9,
+  level_start = 10,
 }
 
 -- call this to change music based on given music_state
@@ -1393,55 +1395,59 @@ function play_sound_effect(sound_effect)
     channel_num = 3 -- always use last channel because first 3 are for music
 
     if sound_effect == sound_effects.shield_activate then
-        sfx_num = 58
-        length = 8
-        offset = 0
+      sfx_num = 58
+      length = 8
+      offset = 0
     elseif sound_effect == sound_effects.player_attack then
-        combo_num = #player.combo.attac
-        sfx_num = 60
-        length = 1
-        -- play higher pitched noise the longer the combo goes
-        offset = combo_num - 1
+      combo_num = #player.combo.attac
+      sfx_num = 60
+      length = 1
+      -- play higher pitched noise the longer the combo goes
+      offset = combo_num - 1
     elseif sound_effect == sound_effects.player_damaged then
-        sfx_num = 57
-        length = 4
-        offset = 0
+      sfx_num = 57
+      length = 4
+      offset = 0
     elseif sound_effect == sound_effects.ninja_throw then
-        sfx_num = 59
-        length = 4
-        offset = 0
+      sfx_num = 59
+      length = 4
+      offset = 0
     elseif sound_effect == sound_effects.enemy_damaged then
-        sfx_num = 57
-        length = 4
-        offset = 8
-        -- player attack feedback is important and enemy_damaged must not drown out player_attack sound
-        channel_num = 2
+      sfx_num = 57
+      length = 4
+      offset = 8
+      -- player attack feedback is important and enemy_damaged must not drown out player_attack sound
+      channel_num = 2
     elseif sound_effect == sound_effects.player_jump then
-        sfx_num = 59
-        length = 6
-        offset = 8
+      sfx_num = 59
+      length = 6
+      offset = 8
     elseif sound_effect == sound_effects.footstep then
-        sfx_num = 55
-        length = 1
-        offset = 0
+      sfx_num = 55
+      length = 1
+      offset = 0
     elseif sound_effect == sound_effects.shield_hold then
-        sfx_num = 54
-        length = 6
-        offset = 0
+      sfx_num = 54
+      length = 6
+      offset = 0
     elseif sound_effect == sound_effects.health_pickup then
-        sfx_num = 63
-        length = 8
-        offset = 0
+      sfx_num = 63
+      length = 8
+      offset = 0
     elseif sound_effect == sound_effects.checkpoint then
-        sfx_num = 63
-        length = 8
-        offset = 16
+      sfx_num = 63
+      length = 8
+      offset = 16
+    elseif sound_effect == sound_effects.level_start then
+      sfx_num = 7
+      length = 10
+      offset = 0
     else
-        throw("unknown sound effect")
+      throw("unknown sound effect")
     end
 
     sfx(sfx_num, channel_num, offset, length)
-end
+  end
 
 -->8
 -- win screen
