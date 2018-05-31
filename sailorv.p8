@@ -770,7 +770,7 @@ end
 function update_splash()
     -- usually we want the player to press one button
      if btnp(5) then
-         change_state(game_states.level1)
+         change_state(game_states.win_screen)
      end
      t+= 1
 end
@@ -975,12 +975,56 @@ end
 
 -- win
 function update_win()
-
+    t += 1
+    if are_credits_over() then
+        if btnp(5) then
+            -- reset cartridge data
+            load("sailorv")
+        end
+    end
 end
 
 function draw_win()
-    local text = "c'est la vie..."
-    write(text, text_x_pos(text), 50,7)
+    rectfill(0,0,screen_size,screen_size,1)
+    local x = t / 8
+    x = x % 128
+    local y=0
+    map(21, 16, -x, y, 16, 16, 0)
+    map(21, 16, 128-(x), y, 16, 16, 0)
+
+    --static skyline
+    palt(0, false)
+    palt(1, true)
+    pal(13,2)
+    y = 0
+    map(0, 17, 0, y-8, 128, 32)
+    pal()
+    palt(1,false)
+    palt(0, true)
+
+    palt(0, false)
+    palt(1, true)
+    map(0, 17, 0, y, 128, 32, 0x5)
+    map(0, 17, 64, y, 128, 32, 0x5)
+    palt(1, false)
+    palt(0, true)
+
+    local cur_base_pos = base_credits_pos
+    for i=1,#credits do
+        write(credits[i], text_x_pos(credits[i]), cur_base_pos,7)
+        cur_base_pos += credits_spacing
+    end
+
+    cur_win_tick +=1 -- increase tick
+
+    -- if it is time to move the credits upwards 
+    if cur_win_tick % win_ticks_per_movement == 0 then
+        if not are_credits_over() then
+            -- credits are not done yet, keep scrolling the text
+            base_credits_pos -= scroll_speed  -- move text upwards
+        end
+        cur_win_tick = 0 -- reset tick timer
+    end
 end
 
 
@@ -1291,6 +1335,19 @@ function play_sound_effect(sound_effect)
     sfx(sfx_num, channel_num, offset, length)
 end
 
+-->8
+-- win screen
+win_ticks_per_movement = 4
+cur_win_tick = 0
+credits = {"the city is safe!", "", "", "", "", "programmed by:", "jessica hsieh",  "dan nguyen", "mark nickerson", "", "art by:", "jamie chen", "sydney schiller", "", "music by:", "davey jay belliss", "", "special thanks", "joshua mccoy", "", "", "", "", "", "", "", "c'est la vie"}
+scroll_speed = 1 -- how many pixels a credit moves per draw
+credits_spacing = 8  -- how far apart each credit is vertically
+base_credits_pos = 120
+
+function are_credits_over() 
+    -- if the last line of credits is past the middle of the screen, don't scroll anymore
+    return (#credits * credits_spacing) + base_credits_pos < 60
+end
 __gfx__
 0000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000065550000
 00000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000065550000
