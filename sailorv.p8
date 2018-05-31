@@ -128,8 +128,8 @@ end
 
 function kick()
 
-  -- play finishing punch sound
-  play_sound_effect(sound_effects.player_finisher)
+  -- play attack sound
+  play_sound_effect(sound_effects.player_attack)
 
   actor.sprt = 11
   actor.idletmr = 0
@@ -138,8 +138,8 @@ function kick()
     actor.sprt = 12
   end
 
-  -- play non finishing punch sound
-  play_sound_effect(sound_effects.player_punch)
+  -- play attack sound
+  play_sound_effect(sound_effects.player_attack)
 
   if actor.flp == true then
     if player.x-4 <= 0  or (solid(player, player.x-6, player.y-0.5, 1)) then
@@ -160,8 +160,8 @@ end
 
 function punch()
 
-   -- play finishing punch sound
-   play_sound_effect(sound_effects.player_finisher)
+   -- play attack sound
+   play_sound_effect(sound_effects.player_attack)
   	actor.sprt = player.combo.sprt
   	actor.sprt += sprite_animator(0.2)
   	actor.idletmr = 0
@@ -169,8 +169,8 @@ function punch()
     	actor.sprt = 4
   	end
 
-   -- play non finishing punch sound
-   play_sound_effect(sound_effects.player_punch)
+   -- play attack soundn
+   play_sound_effect(sound_effects.player_attack)
 
   if actor.flp == true then
     if player.x-4 <= 0  or (solid(player, player.x-4, player.y-0.5, 1)) then
@@ -770,7 +770,7 @@ end
 function update_splash()
     -- usually we want the player to press one button
      if btnp(5) then
-         change_state(game_states.win_screen)
+         change_state(game_states.level1)
      end
      t+= 1
 end
@@ -1239,7 +1239,7 @@ music_states = {
 
 sound_effects = {
    shield_activate = 0,
-   player_punch = 1,
+   player_attack = 1,
    player_damaged = 2,
    ninja_throw = 3,
    enemy_damaged = 4,
@@ -1247,7 +1247,6 @@ sound_effects = {
    footstep = 6,
    shield_hold = 7,
    health_pickup = 8,
-   player_finisher = 9,
 }
 
 -- call this to change music based on given music_state
@@ -1287,17 +1286,12 @@ function play_sound_effect(sound_effect)
         sfx_num = 58
         length = 8
         offset = 0
-    elseif sound_effect == sound_effects.player_punch then
+    elseif sound_effect == sound_effects.player_attack then
+        combo_num = #player.combo.attac
         sfx_num = 60
         length = 1
-
-        -- alternate between 2 sounds
-        if rnd(10) > 5 then
-            offset = 0
-        else
-            offset = 1
-        end
-
+        -- play higher pitched noise the longer the combo goes
+        offset = combo_num - 1
     elseif sound_effect == sound_effects.player_damaged then
         sfx_num = 57
         length = 4
@@ -1310,6 +1304,8 @@ function play_sound_effect(sound_effect)
         sfx_num = 57
         length = 4
         offset = 8
+        -- player attack feedback is important and enemy_damaged must not drown out player_attack sound
+        channel_num = 2
     elseif sound_effect == sound_effects.player_jump then
         sfx_num = 59
         length = 6
@@ -1326,10 +1322,8 @@ function play_sound_effect(sound_effect)
         sfx_num = 63
         length = 8
         offset = 0
-    elseif sound_effect == sound_effects.player_finisher then
-        sfx_num = 60
-        length = 2
-        offset = 1
+    else
+        throw("unknown sound effect")
     end
 
     sfx(sfx_num, channel_num, offset, length)
@@ -1574,7 +1568,7 @@ __sfx__
 0105000029750287502675024750000000000000000000001c6531a63318613146031360311603116030000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 010200002422024230242402425025250282502c2502f250002000020000200002000020000200002000020000200002000020000200002000020000200002000000000000000000000000000000000000000000
 0003000015050180501b0501f05000000000000000000000180501c0501e050210502305023050230001f00000000000000000015000180001b0001f00000000000000000000000295001d5000f5000250000000
-010c00001e04323043230431070010700107001070000700007030070300703007030070300703007030070300703007030070300703007030070300703007030070300703007030070300703007030070300703
+010c000018043210432b04330043390433b0430070300703007030070300703007030070300703007030070300703007030070300703007030070300000000000000000000000000000000000000000000000000
 010a0000230430e600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 011000002505310600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 010500002875024750207502075022750277502c7502e730147000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
