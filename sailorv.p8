@@ -339,18 +339,22 @@ else
   --end
   player.time+=1
 
+  if(brawl_clear == false and brawl_spawn == true) then
+    if player.x <= brawl_bounds.x - 88 then
+      player.x = brawl_bounds.x - 88
+    end
+    if player.x >= brawl_bounds.x + 31 then
+      player.x = brawl_bounds.x + 31
+    end
+  end
+
   if player.hearts == 0 or player.y >= 180 then
     num_lives -= 1
     if num_lives <= 0 then
         change_state(game_states.lose_screen)
     else
         -- new life
-        player.hearts = 3
-        player.x = cur_checkpoint.x
-        player.y = cur_checkpoint.y
-        brawl_clear = true
-        cam.x = player.x
-        -- camera(player.x, player.y)
+        reset_checkpoint()
     end
   end
 
@@ -386,7 +390,7 @@ function solid(obs, x, y, tag)
     else
       return false
     end
-  elseif (obs.tag == 3) or (obs.tag == 4)  then 
+  elseif (obs.tag == 3) or (obs.tag == 4)  then
     -- 4 is hearts, 6 is checkpoints
     if (fget(mget(tilex1, tiley1), tag)) then
       return true
@@ -403,6 +407,9 @@ function obs_collision(obj1, obj2)
         if obj2.hearts < 3 then
           play_sound_effect(sound_effects.health_pickup)
           obj2.hearts += 1
+          if obj2.hearts > 3 then
+            obj2.hearts = 3
+          end
           del(obj1, f)
         end
       end
@@ -415,7 +422,7 @@ function obs_collision(obj1, obj2)
             taking_damage = true
             play_sound_effect(sound_effects.player_damaged)
             camera(cos(t/3), cos(t/2))
-            obj2.hearts -= 1
+            obj2.hearts -= 0.5
           end
         else
          outter -= 4
@@ -426,14 +433,24 @@ function obs_collision(obj1, obj2)
     elseif obj1.tag == 2 then
       if((f.y <= obj2.y+8) and (f.y >= obj2.y-8)) and ((f.x <= obj2.x+8) and (f.x >= obj2.x-8)) then
         if actor.flp == true then
+          if(f.x-6.5 <= 0 or solid(f, f.x - 6.5, f.y-0.5, 1)) then
+            f.x = f.x
+          else
             f.x -= 6.5
+          end
         else
+          if(f.x+6.5 <= 0 or solid(f, f.x + 6.5, f.y-0.5, 1)) then
+            f.x = f.x
+          else
             f.x += 6.5
+          end
         end
-        f.health -= obj2.combo.dmg
-        play_sound_effect(sound_effects.enemy_damaged)
-        if f.health <= 0 then
+        if(f.health) then
+          f.health -= obj2.combo.dmg
+          play_sound_effect(sound_effects.enemy_damaged)
+          if f.health <= 0 then
             del(obj1, f)
+          end
         end
       end
 
@@ -450,6 +467,29 @@ function obs_collision(obj1, obj2)
      end
 
     if (f.x<=0) del(obj1, f)
+  end
+end
+
+function reset_checkpoint()
+  player.hearts = 3
+  player.x = cur_checkpoint.x
+  player.y = cur_checkpoint.y
+
+  -- reset enemies
+
+  -- reset brawls
+  brawl_clear = true
+  brawl_spawn = false
+
+  -- delete level objects and recreate them
+  delete_level_obs()
+  instantiate_level_obs()
+
+  -- reset camera
+  if cur_checkpoint.x <= 50 then
+    cam.x = 0
+  else
+    cam.x = player.x
   end
 end
 
@@ -537,6 +577,9 @@ function _init()
     t = 0
     taking_damage = false
     enemycount = 0
+    -- checkpoint stuff
+    cur_checkpoint = {x=21, y=1}
+    brawl_bounds = {x=0}
     cls()
     camera(0, 0)
     change_music(music_states.splash_screen)
@@ -619,7 +662,7 @@ function update_shuriken(obj)
 
   -- deletes shurikens when they go off screen
   if(obj.dx < 0) then
-   if (obj.x > (player.x + 128)) then 
+   if (obj.x > (player.x + 128)) then
     del(shuriken, obj)
    end
   elseif (obj.dx > 0) then
@@ -775,6 +818,8 @@ function spawnbrawl(xlock)
     make_ninja(player.x + 100, 0, 5)
 
     if (xlock-cam.x>64+25) then cam.x+=1 end
+
+    brawl_bounds = {x=xlock}
   end
 
   if not brawl_clear then
@@ -865,20 +910,14 @@ end
 -- game
 
 function init_game()
- player = make_player(20,1)
-  -- location to spawn first ninja
-  ninjaspawn = 0
-  make_ninja(469, 0) -- because dan wanted a ninja here
+  player = make_player(20,1)
+
   brawl_spawn = false
   brawl_clear = true
 
-  create_obs(health_pack, 39, 180, 4, 1, 4, 1, 1)
-  create_obs(health_pack, 39, 300, 4, 1, 4, 1, 1)
-  create_obs(health_pack, 39, 400, 4, 1, 4, 1, 1)
-  create_obs(health_pack, 39, 500, 4, 1, 4, 1, 1)
-  create_obs(health_pack, 39, 700, 4, 1, 4, 1, 1)
-
   create_obs(checkpoint, 77, 510, 4, 1, 6, 1, 2)
+
+  instantiate_level_obs()
 end
 
 function update_game()
@@ -967,7 +1006,7 @@ function draw_game()
  -- print(player.incombo,cam.x,16,7)
   -- print(brawl_clear, cam.x + 5,24,0)
   -- print(brawl_spawn,cam.x + 5,32,0)
-  -- print(#allninjas,cam.x + 5,40,0)
+   print(player.x,cam.x + 5,40,0)
   -- print(enemycount,cam.x + 5,48,0)
   draw_hearts()
   draw_lives()
@@ -988,19 +1027,12 @@ function draw_gameover()
     local restart_text = "press x to restart"
     write(text, text_x_pos(text), 50,7)
     write(restart_text, text_x_pos(restart_text), 64,7)
-    -- deletes ninjas and shurikens
-    for obj in all(allninjas) do
-      del(allninjas, obj)
-    end
-    for obj in all(shuriken) do
-      del(shuriken, obj)
-    end
-    for obj in all(health_pack) do
-      del(health_pack, obj)
-    end
+    -- remove checkpoints
     for obj in all(checkpoint) do
       del(checkpoint, obj)
     end
+    -- remove everything else
+    delete_level_obs()
 end
 
 -- win
@@ -1047,7 +1079,7 @@ function draw_win()
 
     cur_win_tick +=1 -- increase tick
 
-    -- if it is time to move the credits upwards 
+    -- if it is time to move the credits upwards
     if cur_win_tick % win_ticks_per_movement == 0 then
         if not are_credits_over() then
             -- credits are not done yet, keep scrolling the text
@@ -1080,14 +1112,26 @@ function draw_hearts()
     spr(36, cam.x+110, 1)
     spr(36, cam.x+101, 1)
     spr(36, cam.x+92, 1)
+  elseif (player.hearts == 2.5) then
+    spr(40, cam.x+110, 1)
+    spr(36, cam.x+101, 1)
+    spr(36, cam.x+92, 1)
   elseif (player.hearts == 2) then
     spr(37, cam.x+110, 1)
     spr(36, cam.x+101, 1)
+    spr(36, cam.x+92, 1)
+  elseif (player.hearts == 1.5) then
+    spr(37, cam.x+110, 1)
+    spr(40, cam.x+101, 1)
     spr(36, cam.x+92, 1)
   elseif (player.hearts == 1) then
     spr(37, cam.x+110, 1)
     spr(37, cam.x+101, 1)
     spr(36, cam.x+92, 1)
+  elseif (player.hearts == 0.5) then
+    spr(37, cam.x+110, 1)
+    spr(37, cam.x+101, 1)
+    spr(40, cam.x+92, 1)
   elseif (player.hearts == 0) then
     spr(37, cam.x+110, 1)
     spr(37, cam.x+101, 1)
@@ -1100,6 +1144,34 @@ function draw_lives()
     local text = num_lives.."x"
     write(text, cam.x+100, 12, 7)
     spr(3, cam.x+110, 10)
+end
+
+function instantiate_level_obs()
+  -- location to spawn first ninja
+  ninjaspawn = 0
+
+  make_ninja(469, 0) -- because dan wanted a ninja here
+
+  create_obs(health_pack, 39, 180, 4, 1, 4, 1, 1)
+  create_obs(health_pack, 39, 300, 4, 1, 4, 1, 1)
+  create_obs(health_pack, 39, 400, 4, 1, 4, 1, 1)
+  create_obs(health_pack, 39, 500, 4, 1, 4, 1, 1)
+  create_obs(health_pack, 39, 700, 4, 1, 4, 1, 1)
+
+end
+
+function delete_level_obs()
+  -- deletes ninjas and shurikens
+  for obj in all(allninjas) do
+    del(allninjas, obj)
+  end
+  for obj in all(shuriken) do
+    del(shuriken, obj)
+  end
+  for obj in all(health_pack) do
+    del(health_pack, obj)
+  end
+
 end
 
 -- utils
@@ -1375,19 +1447,18 @@ end
 -- win screen
 win_ticks_per_movement = 4
 cur_win_tick = 0
-credits = {"the city is safe!", "", "", "", "", "programmed by:", "jessica hsieh",  "dan nguyen", "mark nickerson", "", "art by:", "jamie chen", "sydney schiller", "", "music by:", "davey jay belliss", "", "special thanks", "joshua mccoy", "", "", "", "", "", "", "", "c'est la vie"}
+credits = {"the city is safe!", "", "", "", "programmed by:", "jessica hsieh",  "dan nguyen", "mark nickerson", "sydney schiller", "", "art by:", "jamie chen", "sydney schiller", "", "music by:", "davey jay belliss", "", "special thanks", "joshua mccoy", "", "", "", "", "", "", "", "c'est la vie"}
 scroll_speed = 1 -- how many pixels a credit moves per draw
 credits_spacing = 8  -- how far apart each credit is vertically
 base_credits_pos = 120
 
-function are_credits_over() 
+function are_credits_over()
     -- if the last line of credits is past the middle of the screen, don't scroll anymore
     return (#credits * credits_spacing) + base_credits_pos < 60
 end
 -->8
 
--- checkpoint stuff
-cur_checkpoint = {x=21, y=1}
+
 
 
 __gfx__
@@ -1668,4 +1739,3 @@ __music__
 00 1e1d5f44
 00 211f4344
 02 1d354344
-
