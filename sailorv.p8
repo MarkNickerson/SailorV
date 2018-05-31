@@ -919,7 +919,11 @@ function draw_game()
 
 
   --
-	-- print('combo:'..player.combo.attac,cam.x,0,7)
+	print('combo: '..player.combo.attac,cam.x,0,7)
+	print('damage:',cam.x,8,7)
+	if player.combo.dmg then
+	print(player.combo.dmg, cam.x+28,8,7)
+    end
 	-- print('combo timer:'..player.combotimer,cam.x,8,7)
 	-- print(player.incombo,cam.x,16,7)
   -- print(brawl_clear, cam.x + 5,24,0)
