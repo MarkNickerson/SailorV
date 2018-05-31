@@ -595,6 +595,17 @@ function update_shuriken(obj)
     del(shuriken, obj)
   end
 
+  -- deletes shurikens when they go off screen
+  if(obj.dx < 0) then
+  	if (obj.x > (player.x + 128)) then 
+  		del(shuriken, obj)
+  	end
+  elseif (obj.dx > 0) then
+  	if (obj.x < (player.x - 128)) then
+  		del(shuriken, obj)
+  	end
+  end
+
   obs_collision(shuriken, player)
 	if(t % 6 == 0) then
     if solid(obj, obj.x, obj.y, 1) then
@@ -714,7 +725,7 @@ function update_ninja(ninja)
   end
 
   ninja.dy+=ninja.gravity
-
+  -- delete ninja if it falls into the abyss
   if(ninja.y >= 150) then
     del(allninjas, ninja)
   end
@@ -834,6 +845,7 @@ function init_game()
 	player = make_player(20,1)
   -- location to spawn first ninja
   ninjaspawn = 0
+  make_ninja(469, 0) -- because dan wanted a ninja here
   brawl_spawn = false
   brawl_clear = true
 
