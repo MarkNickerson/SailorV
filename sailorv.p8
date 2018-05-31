@@ -25,7 +25,7 @@ cam = {
 }
 
 state = game_states.splash
-
+num_lives = 3
 next_state = game_states.splash -- level to load after loading screen
 
 loading_end_time = 0 -- keeps track of when loading screen ends automatically
@@ -58,23 +58,9 @@ function change_state(desired_state)
             -- todo speed up this
             change_music(music_states.factory)
         end
-
-        -- -- temp for now to enjoy all musics
-        -- music_randomizer = rnd(10)
-        -- if music_randomizer < 2 then
-        --     change_music(music_states.city)
-        -- elseif music_randomizer < 4 then
-        --     change_music(music_states.dungeon)
-        -- elseif music_randomizer < 6 then
-        --     change_music(music_states.factory)
-        -- elseif music_randomizer < 8 then
-        --     change_music(music_states.miniboss)
-        -- else
-        --     change_music(music_states.final_boss)
-        -- end
-
         state = next_state
     elseif desired_state == game_states.splash then
+        num_lives = 3
         state = game_states.splash
         change_music(music_states.splash_screen)
     elseif desired_state == game_states.lose_screen then
@@ -128,8 +114,8 @@ end
 
 function kick()
 
-  -- play finishing punch sound
-  play_sound_effect(sound_effects.player_finisher)
+  -- play attack sound
+  play_sound_effect(sound_effects.player_attack)
 
   actor.sprt = 11
   actor.idletmr = 0
@@ -138,8 +124,8 @@ function kick()
     actor.sprt = 12
   end
 
-  -- play non finishing punch sound
-  play_sound_effect(sound_effects.player_punch)
+  -- play attack sound
+  play_sound_effect(sound_effects.player_attack)
 
   if actor.flp == true then
     if player.x-4 <= 0  or (solid(player, player.x-6, player.y-0.5, 1)) then
@@ -160,17 +146,17 @@ end
 
 function punch()
 
-   -- play finishing punch sound
-   play_sound_effect(sound_effects.player_finisher)
-  	actor.sprt = player.combo.sprt
-  	actor.sprt += sprite_animator(0.2)
-  	actor.idletmr = 0
-  	if actor.sprt>=7 then
-    	actor.sprt = 4
-  	end
+   -- play attack sound
+   play_sound_effect(sound_effects.player_attack)
+   actor.sprt = player.combo.sprt
+   actor.sprt += sprite_animator(0.2)
+   actor.idletmr = 0
+   if actor.sprt>=7 then
+     actor.sprt = 4
+   end
 
-   -- play non finishing punch sound
-   play_sound_effect(sound_effects.player_punch)
+   -- play attack soundn
+   play_sound_effect(sound_effects.player_attack)
 
   if actor.flp == true then
     if player.x-4 <= 0  or (solid(player, player.x-4, player.y-0.5, 1)) then
@@ -191,9 +177,9 @@ end
 
 
 function sprite_animator(x) -- this function receives the number of frames to animate by, increaments by the supplied amount and returns the value back calling user input function
-	local y = 0
-	y += x
-	return y
+ local y = 0
+ y += x
+ return y
 end
 
 --------------------------------------------------------------------------------
@@ -248,8 +234,8 @@ function move_player()
     if player.last == false then
       --do the thing here
       player.combotimer = 30
- 			player.incombo = true
- 			player.last = true
+    player.incombo = true
+    player.last = true
 
       if btn(4) then
         if #player.combo.attac == 4 then
@@ -354,7 +340,18 @@ else
   player.time+=1
 
   if player.hearts == 0 or player.y >= 180 then
-    change_state(game_states.lose_screen)
+    num_lives -= 1
+    if num_lives <= 0 then
+        change_state(game_states.lose_screen)
+    else
+        -- new life
+        player.hearts = 3
+        player.x = cur_checkpoint.x
+        player.y = cur_checkpoint.y
+        brawl_clear = true
+        cam.x = player.x
+        -- camera(player.x, player.y)
+    end
   end
 
   if(solid(player, player.x, player.y-0.5, 7)) then
@@ -366,15 +363,15 @@ else
 end
 
 function handle_combo()
-		if player.incombo == true then
-			player.combotimer -= 1
-		end
+  if player.incombo == true then
+   player.combotimer -= 1
+  end
 
-		if player.combotimer==0 then
-			player.combotimer=30
-			player.incombo = false
-			player.combo = root
-		end
+  if player.combotimer==0 then
+   player.combotimer=30
+   player.incombo = false
+   player.combo = root
+  end
 end
 
 function solid(obs, x, y, tag)
@@ -383,13 +380,14 @@ function solid(obs, x, y, tag)
   local tiley1 = ((y - (y % 8)) / 8)
   local tiley2 = ((y - (y % 8) - 8) / 8)
 
-  if ((obs.tag == 1) or (obs.tag == 2)) then
+  if ((obs.tag == 1) or (obs.tag == 2)) or (obs.tag == 6) then
     if (fget(mget(tilex1, tiley1), tag)) or (fget(mget(tilex2, tiley1), tag)) or (fget(mget(tilex1, tiley2), tag)) or (fget(mget(tilex2, tiley2), tag))then
       return true
     else
       return false
     end
-  elseif (obs.tag == 3) or (obs.tag == 4) then
+  elseif (obs.tag == 3) or (obs.tag == 4)  then 
+    -- 4 is hearts, 6 is checkpoints
     if (fget(mget(tilex1, tiley1), tag)) then
       return true
     else
@@ -420,7 +418,7 @@ function obs_collision(obj1, obj2)
             obj2.hearts -= 1
           end
         else
-        	outter -= 4
+         outter -= 4
           inner -= 4
         end
       end
@@ -438,7 +436,18 @@ function obs_collision(obj1, obj2)
             del(obj1, f)
         end
       end
-    end
+
+
+    elseif obj1.tag == 6 then
+        -- obj1 is checkpoint
+        if((f.y <= obj2.y+8) and (f.y >= obj2.y-20)) and ((f.x <= obj2.x+8) and (f.x >= obj2.x-8)) then
+            if cur_checkpoint != f then
+                play_sound_effect(sound_effects.checkpoint)
+                cur_checkpoint = f
+                f.sprite = 78
+            end
+        end
+     end
 
     if (f.x<=0) del(obj1, f)
   end
@@ -580,6 +589,19 @@ function update_health_pack(obj)
   end
 end
 
+checkpoint = {
+  tag = 6
+}
+
+function update_checkpoint(obj)
+  obs_collision(checkpoint, player)
+  if not solid(obj, obj.x, obj.y+16, 1) then
+    obj.y += 2 * obj.dx
+  end
+end
+
+
+
 
 ------------------------------------------------ enemies
 shuriken = {
@@ -597,17 +619,17 @@ function update_shuriken(obj)
 
   -- deletes shurikens when they go off screen
   if(obj.dx < 0) then
-  	if (obj.x > (player.x + 128)) then 
-  		del(shuriken, obj)
-  	end
+   if (obj.x > (player.x + 128)) then 
+    del(shuriken, obj)
+   end
   elseif (obj.dx > 0) then
-  	if (obj.x < (player.x - 128)) then
-  		del(shuriken, obj)
-  	end
+   if (obj.x < (player.x - 128)) then
+    del(shuriken, obj)
+   end
   end
 
   obs_collision(shuriken, player)
-	if(t % 6 == 0) then
+ if(t % 6 == 0) then
     if solid(obj, obj.x, obj.y, 1) then
       obj.x = obj.x
       obj.flip = false
@@ -615,19 +637,19 @@ function update_shuriken(obj)
       obj.x -= 8 * obj.dx
 
     end
-		if(obj.flip == true) then
-			obj.flip = false
-		else
-			obj.flip = true
-		end
-	end
+  if(obj.flip == true) then
+   obj.flip = false
+  else
+   obj.flip = true
+  end
+ end
 end
 
 function draw_obj(obj)
-  	spr(obj.sprite, obj.x, obj.y, 1, 1, obj.flip)
+   spr(obj.sprite, obj.x, obj.y, obj.width, obj.height, obj.flip)
 end
 
-function create_obs(obj, sprite, x, y, dx, tag)
+function create_obs(obj, sprite, x, y, dx, tag, width, height)
   -- empty table to fill with below values
   local o = {}
   o.x = x
@@ -637,6 +659,9 @@ function create_obs(obj, sprite, x, y, dx, tag)
   o.flip = false
   o.tag = tag
   o.birthdate = t
+
+  o.width = width
+  o.height = height
 
   add(obj, o)
   return o
@@ -653,7 +678,7 @@ function make_ninja(x,y, hp)
     p_speed=0.02 + (rnd(0.075)),         -- acceleration force
     drag=0.02,            -- drag force
     gravity=0.15,         -- gravity
-    flip = false,		-- false == left facing, true == right facing
+    flip = false,  -- false == left facing, true == right facing
     health = hp,
     sprite = 67,
     is_throwing = false,
@@ -668,8 +693,8 @@ end
 
 function walk_ninja(ninja)
   if(ninja.is_walking) then
-  	if(ninja.dx == 0) then
-  		ninja.sprite = 64
+   if(ninja.dx == 0) then
+    ninja.sprite = 64
     elseif(t % 10 == 0 and ninja.sprite != 72) then
       ninja.sprite = ninja.sprite + 1
     elseif(t % 10 == 0 and ninja.sprite == 72) then
@@ -680,24 +705,24 @@ function walk_ninja(ninja)
 end
 
 function throw_ninja(ninja)
-  	if(ninja.is_throwing == true) then
+   if(ninja.is_throwing == true) then
     if(ninja.throw_timer == 0) then -- spawn a shuriken once animation finishes
             play_sound_effect(sound_effects.ninja_throw)
-  			if(ninja.flip) then -- facing right
-  				create_obs(shuriken, 79, ninja.x+4, ninja.y-10, -1, 3)
-  			else -- facing left
-  				create_obs(shuriken, 79, ninja.x-4, ninja.y-10, 1, 3)
-  			end
-  			ninja.is_throwing = false
+     if(ninja.flip) then -- facing right
+      create_obs(shuriken, 79, ninja.x+4, ninja.y-10, -1, 3, 1, 1) -- last 2 arguments are width and height of 1
+     else -- facing left
+      create_obs(shuriken, 79, ninja.x-4, ninja.y-10, 1, 3, 1, 1) -- last 2 arguments are width and height of 1
+     end
+     ninja.is_throwing = false
         ninja.is_walking = true
-  			ninja.throw_mod = 250 + flr(rnd(200))
-  			ninja.sprite = 67
-  		elseif(ninja.throw_timer > 13) then
-  			ninja.sprite = 65
-  		elseif(ninja.throw_timer > 0) then
-  			ninja.sprite = 66
-  		end
-  		ninja.throw_timer -= 2
+     ninja.throw_mod = 250 + flr(rnd(200))
+     ninja.sprite = 67
+    elseif(ninja.throw_timer > 13) then
+     ninja.sprite = 65
+    elseif(ninja.throw_timer > 0) then
+     ninja.sprite = 66
+    end
+    ninja.throw_timer -= 2
     elseif(t % ninja.throw_mod == 0) then -- cannot throw while previous throw is being completed
       ninja.is_throwing=true
       ninja.is_walking = false
@@ -709,18 +734,18 @@ function update_ninja(ninja)
   -- ninja spawns and runs to the left
 
   if(player.x < ninja.x and ninja.dx > -ninja.max_dx) then
-  	if((ninja.x - player.x) < 8) then --player isnt moving, ninja stops at player location
-  		ninja.dx = 0
-  	else
-    	ninja.flip = false
+   if((ninja.x - player.x) < 8) then --player isnt moving, ninja stops at player location
+    ninja.dx = 0
+   else
+     ninja.flip = false
       ninja.dx-=ninja.p_speed
   end
   elseif(player.x > ninja.x and ninja.dx < ninja.max_dx) then
     if((player.x - ninja.x) < 8) then
-  		ninja.dx = 0
-  	else
-    	ninja.flip = true
-    	ninja.dx += ninja.p_speed
+    ninja.dx = 0
+   else
+     ninja.flip = true
+     ninja.dx += ninja.p_speed
     end
   end
 
@@ -734,10 +759,8 @@ end
 function draw_ninja(ninja)
     walk_ninja(ninja)
     throw_ninja(ninja)
-  	spr(ninja.sprite, ninja.x, ninja.y-16, 1, 2, ninja.flip)
+   spr(ninja.sprite, ninja.x, ninja.y-16, 1, 2, ninja.flip)
 end
-
-
 
 function spawnbrawl(xlock)
   if brawl_spawn == false then
@@ -842,18 +865,20 @@ end
 -- game
 
 function init_game()
-	player = make_player(20,1)
+ player = make_player(20,1)
   -- location to spawn first ninja
   ninjaspawn = 0
   make_ninja(469, 0) -- because dan wanted a ninja here
   brawl_spawn = false
   brawl_clear = true
 
-  create_obs(health_pack, 39, 180, 4, 1, 4)
-  create_obs(health_pack, 39, 300, 4, 1, 4)
-  create_obs(health_pack, 39, 400, 4, 1, 4)
-  create_obs(health_pack, 39, 500, 4, 1, 4)
-  create_obs(health_pack, 39, 700, 4, 1, 4)
+  create_obs(health_pack, 39, 180, 4, 1, 4, 1, 1)
+  create_obs(health_pack, 39, 300, 4, 1, 4, 1, 1)
+  create_obs(health_pack, 39, 400, 4, 1, 4, 1, 1)
+  create_obs(health_pack, 39, 500, 4, 1, 4, 1, 1)
+  create_obs(health_pack, 39, 700, 4, 1, 4, 1, 1)
+
+  create_obs(checkpoint, 77, 510, 4, 1, 6, 1, 2)
 end
 
 function update_game()
@@ -865,6 +890,7 @@ function update_game()
   end
   foreach(shuriken, update_shuriken)
   foreach(health_pack, update_health_pack)
+  foreach(checkpoint, update_checkpoint)
   move_actor(player)
   foreach(allninjas, move_actor)
 
@@ -918,6 +944,7 @@ function draw_game()
   foreach(allninjas, draw_ninja)
   foreach(shuriken, draw_obj)
   foreach(health_pack, draw_obj)
+  foreach(checkpoint, draw_obj)
   if(blocking == true) then
     if actor.flp == true then
       circfill(player.x+4, player.y-8, outter, 10)
@@ -927,22 +954,23 @@ function draw_game()
       circfill(player.x-1, player.y-8, inner, 0)
     end
   end
- 	draw_player()
+  draw_player()
 
 
   --
-	print('combo: '..player.combo.attac,cam.x,0,7)
-	print('damage:',cam.x,8,7)
-	if player.combo.dmg then
-	print(player.combo.dmg, cam.x+28,8,7)
+ print('combo: '..player.combo.attac,cam.x,0,7)
+ print('damage:',cam.x,8,7)
+ if player.combo.dmg then
+ print(player.combo.dmg, cam.x+28,8,7)
     end
-	-- print('combo timer:'..player.combotimer,cam.x,8,7)
-	-- print(player.incombo,cam.x,16,7)
+ -- print('combo timer:'..player.combotimer,cam.x,8,7)
+ -- print(player.incombo,cam.x,16,7)
   -- print(brawl_clear, cam.x + 5,24,0)
   -- print(brawl_spawn,cam.x + 5,32,0)
   -- print(#allninjas,cam.x + 5,40,0)
   -- print(enemycount,cam.x + 5,48,0)
   draw_hearts()
+  draw_lives()
   camera(0,0)
 end
 
@@ -970,17 +998,63 @@ function draw_gameover()
     for obj in all(health_pack) do
       del(health_pack, obj)
     end
-
+    for obj in all(checkpoint) do
+      del(checkpoint, obj)
+    end
 end
 
 -- win
 function update_win()
-
+    t += 1
+    if are_credits_over() then
+        if btnp(5) then
+            -- reset cartridge data
+            load("sailorv")
+        end
+    end
 end
 
 function draw_win()
-    local text = "c'est la vie..."
-    write(text, text_x_pos(text), 50,7)
+    rectfill(0,0,screen_size,screen_size,1)
+    local x = t / 8
+    x = x % 128
+    local y=0
+    map(21, 16, -x, y, 16, 16, 0)
+    map(21, 16, 128-(x), y, 16, 16, 0)
+
+    --static skyline
+    palt(0, false)
+    palt(1, true)
+    pal(13,2)
+    y = 0
+    map(0, 17, 0, y-8, 128, 32)
+    pal()
+    palt(1,false)
+    palt(0, true)
+
+    palt(0, false)
+    palt(1, true)
+    map(0, 17, 0, y, 128, 32, 0x5)
+    map(0, 17, 64, y, 128, 32, 0x5)
+    palt(1, false)
+    palt(0, true)
+
+    local cur_base_pos = base_credits_pos
+    for i=1,#credits do
+        write(credits[i], text_x_pos(credits[i]), cur_base_pos,7)
+        cur_base_pos += credits_spacing
+    end
+
+    cur_win_tick +=1 -- increase tick
+
+    -- if it is time to move the credits upwards 
+    if cur_win_tick % win_ticks_per_movement == 0 then
+        if not are_credits_over() then
+            -- credits are not done yet, keep scrolling the text
+            base_credits_pos -= scroll_speed  -- move text upwards
+        end
+        cur_win_tick = 0 -- reset tick timer
+    end
 end
 
 
@@ -1019,6 +1093,13 @@ function draw_hearts()
     spr(37, cam.x+101, 1)
     spr(37, cam.x+92, 1)
   end
+end
+
+-- draw lives ui
+function draw_lives()
+    local text = num_lives.."x"
+    write(text, cam.x+100, 12, 7)
+    spr(3, cam.x+110, 10)
 end
 
 -- utils
@@ -1195,7 +1276,7 @@ music_states = {
 
 sound_effects = {
    shield_activate = 0,
-   player_punch = 1,
+   player_attack = 1,
    player_damaged = 2,
    ninja_throw = 3,
    enemy_damaged = 4,
@@ -1203,7 +1284,7 @@ sound_effects = {
    footstep = 6,
    shield_hold = 7,
    health_pickup = 8,
-   player_finisher = 9,
+   checkpoint = 9,
 }
 
 -- call this to change music based on given music_state
@@ -1243,17 +1324,12 @@ function play_sound_effect(sound_effect)
         sfx_num = 58
         length = 8
         offset = 0
-    elseif sound_effect == sound_effects.player_punch then
+    elseif sound_effect == sound_effects.player_attack then
+        combo_num = #player.combo.attac
         sfx_num = 60
         length = 1
-
-        -- alternate between 2 sounds
-        if rnd(10) > 5 then
-            offset = 0
-        else
-            offset = 1
-        end
-
+        -- play higher pitched noise the longer the combo goes
+        offset = combo_num - 1
     elseif sound_effect == sound_effects.player_damaged then
         sfx_num = 57
         length = 4
@@ -1266,6 +1342,8 @@ function play_sound_effect(sound_effect)
         sfx_num = 57
         length = 4
         offset = 8
+        -- player attack feedback is important and enemy_damaged must not drown out player_attack sound
+        channel_num = 2
     elseif sound_effect == sound_effects.player_jump then
         sfx_num = 59
         length = 6
@@ -1282,14 +1360,35 @@ function play_sound_effect(sound_effect)
         sfx_num = 63
         length = 8
         offset = 0
-    elseif sound_effect == sound_effects.player_finisher then
-        sfx_num = 60
-        length = 2
-        offset = 1
+    elseif sound_effect == sound_effects.checkpoint then
+        sfx_num = 63
+        length = 8
+        offset = 16
+    else
+        throw("unknown sound effect")
     end
 
     sfx(sfx_num, channel_num, offset, length)
 end
+
+-->8
+-- win screen
+win_ticks_per_movement = 4
+cur_win_tick = 0
+credits = {"the city is safe!", "", "", "", "", "programmed by:", "jessica hsieh",  "dan nguyen", "mark nickerson", "", "art by:", "jamie chen", "sydney schiller", "", "music by:", "davey jay belliss", "", "special thanks", "joshua mccoy", "", "", "", "", "", "", "", "c'est la vie"}
+scroll_speed = 1 -- how many pixels a credit moves per draw
+credits_spacing = 8  -- how far apart each credit is vertically
+base_credits_pos = 120
+
+function are_credits_over() 
+    -- if the last line of credits is past the middle of the screen, don't scroll anymore
+    return (#credits * credits_spacing) + base_credits_pos < 60
+end
+-->8
+
+-- checkpoint stuff
+cur_checkpoint = {x=21, y=1}
+
 
 __gfx__
 0000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000065550000
@@ -1324,22 +1423,22 @@ __gfx__
 0dddddddddddddddddd000000d9999999dd00000ddd999990ddddddd00a000000000a0000000000000000a006544444444444456dd66dddd9955999965550000
 0dddddddddddddddddd000500dddddddddd00050dddddddd0ddddddd0000000000000000000000000000000065444444444444565566d5554455944465550000
 0dddddddddddddddddd005000dddddddddd00500dddddddd0ddddddd0000000000000000000000000000000065444444444444565566d5554455944465550000
-00000000000000000000000000000000005550000000000000000000005550000000000000000000000000000000000000000000000000000000000000000000
-00555000005550880000000800555000088888000055500000555000088888000055500000000000000000000000000000000000000000000000000000000800
-088888000888880000055508088888000f4f558008888800088888000f4f55800888880000000000000000000000000000000000000000000000000000009800
-0f4f45800f455500008888800f4f55800fff55800f4f55880f4f55800fff55800f4f5588000000000000000000000000000000000000000000000000088fff00
-0ffff5800ff5550000f4f4500fff5580055555000fff55000fff5508055555000fff5500000000000000000000000000000000000000000000000000009f0f90
-055555000555550500ffff50055555000058500005555500055555000058500005555500000000000000000000000000000000000000000000000000000fff88
-00555000005550505055555000585000008250000058500000585000008250000058500000000000000000000000000000000000000000000000000000089000
-05555800005525000505550000825000005250000082500000825000005250000082500000000000000000000000000000000000000000000000000000080000
-05558200222220000055552000552000005520000052500000525000005250000055200000000000000000000000000000000000000000000000000000000000
-05585200005850000005552000555200005520000025500000255000005250000055520000000000000000000000000000000000000000000000000000000000
-05855200008550000005220002555200005550000025500002555200005550000255520000000000000000000000000000000000000000000000000000000000
-02555200005550000002550000555000005250000055500000555000005250000055500000000000000000000000000000000000000000000000000000000000
-00505000005550000055520000525000005250000052500000525000002250000052500000000000000000000000000000000000000000000000000000000000
-00505000020055000050020000205000000200000005200000502000000200000002000000000000000000000000000000000000000000000000000000000000
-00505000020000500050002200200500005200000005200000500200002200000020500000000000000000000000000000000000000000000000000000000000
-02202200220002200220000202200500002200000052200005500200005500000225500000000000000000000000000000000000000000000000000000000000
+000000000000000000000000000000000055500000000000000000000055500000000000000000000000000000000000000000009988000099bb000000000000
+005550000055508800000008005550000888880000555000005550000888880000555000000000000000000000000000000000009988880099bbbb0000000800
+088888000888880000055508088888000f4f558008888800088888000f4f558008888800000000000000000000000000000000009988888099bbbbb000009800
+0f4f45800f455500008888800f4f55800fff55800f4f55880f4f55800fff55800f4f5588000000000000000000000000000000009988888899bbbbbb088fff00
+0ffff5800ff5550000f4f4500fff5580055555000fff55000fff5508055555000fff5500000000000000000000000000000000009988888099bbbbb0009f0f90
+055555000555550500ffff50055555000058500005555500055555000058500005555500000000000000000000000000000000009988880099bbbb00000fff88
+005550000055505050555550005850000082500000585000005850000082500000585000000000000000000000000000000000009988800099bbb00000089000
+055558000055250005055500008250000052500000825000008250000052500000825000000000000000000000000000000000009980000099b0000000080000
+05558200222220000055552000552000005520000052500000525000005250000055200000000000000000000000000000000000990000009900000000000000
+05585200005850000005552000555200005520000025500000255000005250000055520000000000000000000000000000000000990000009900000000000000
+05855200008550000005220002555200005550000025500002555200005550000255520000000000000000000000000000000000990000009900000000000000
+02555200005550000002550000555000005250000055500000555000005250000055500000000000000000000000000000000000990000009900000000000000
+00505000005550000055520000525000005250000052500000525000002250000052500000000000000000000000000000000000990000009900000000000000
+00505000020055000050020000205000000200000005200000502000000200000002000000000000000000000000000000000000990000009900000000000000
+00505000020000500050002200200500005200000005200000500200002200000020500000000000000000000000000000000000990000009900000000000000
+02202200220002200220000202200500002200000052200005500200005500000225500000000000000000000000000000000000990000009900000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -1421,7 +1520,7 @@ __gfx__
 00000077999999999999977700000077000000000000000000000000000077777770000000000000000000788888888887222270000000000000000000000000
 00000007777777777777770000000000000000000000000000000000000000000000000000000000000000777777777777777700000000000000000000000000
 __gff__
-0000000000000000000000000000000000000000000000000000000000000000020202020000020000000080800002000404040404040400000000808000020000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000020202020000020000000080800002000404040404040400000000808000020000000000000000000000000000404004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __map__
 203f000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -1432,12 +1531,12 @@ __map__
 203f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001e1f1f1f1f1f1f1f1f1f202020203f000000000000000000000000000000000000000000000000000000000000001e1f1f2f00000000000000000000000000000000000000000000
 202a1f1f1f2f0000000000000000000000000000000000000000000000000000000000000000000000000000000000001e1f1f1f2f0d0d0d22222222222222222222202020200f000000cf0000000000000000000000000000000000000000000000000000002222223f00000000000000000000000000000000000000000000
 20222222222a2f000000000000000000000000000e1e1f1f1f2f00000000000000000000000000000000000000000000222222222a2f0d0d0d0d0d0d0000000000000000000000000000cf0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-203f000026222a2f0000000000000000000000001e222222222a2f000000cf1e1f2f00000000000000000000000000cf20202020222a2f0d0d0d0dcf0000000000000000000000000000cf0000000000000000000000000000000000000000001e1f1f2f00000000000000000000000000000000000000000000000000000000
-203f00000026220f0000000000000000000000002220202020222a2f00cf1e22222a2f0000000000000000cfcfcfcfcf290d202020220f0d0d0d0dcf0000000000000000000000000000cf0000000000000000000000000000000000000000002222220f00000000000000000000000000000000000000000000000000000000
-203f000000000000000026000000000000000000202020202020222a1f1f222020223f000000000000000000000000002900000d0d0d0d0d0d1e1f1f2f00000000000000000000000000cf0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001e1f1f1f2f000000
-203f000000000000001e261f1f2f00000000001e20202020202020222222202020200f000000000000000000000000002900000d0d0d0d0d1e2222223fcf000000000000000000000000cf000000001e1f262fcfcfcf261f1f2f0000000000000000000000001e1f1f2f00000000000000000000000000003d3d3d3d3f000000
+203f000026222a2f00005b0000000000000000001e222222222a2f000000cf1e1f2f00000000000000000000000000cf20202020222a2f0d0d0d0dcf0000000000000000000000000000cf0000000000000000000000000000000000000000001e1f1f2f00000000000000000000000000000000000000000000000000000000
+203f00000026220f000000000d0d0d0d000000002220202020222a2f00cf1e22222a2f0000000000000000cfcfcfcfcf290d202020220f0d0d0d0dcf0000000000000000000000000000cf0000000000000000000000000000000000000000002222220f00000000000000000000000000000000000000000000000000000000
+203f000000000000000026000d00000000000000202020202020222a1f1f222020223f000000000000000000000000002900000d0d0d0d0d0d1e1f1f2f00000000000000000000000000cf0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001e1f1f1f2f000000
+203f000000000000001e261f1f2f00000000001e20202020202020222222202020200f0000000000000000000000000d2900000d0d0d0d0d1e2222223fcf000000000000000000000000cf000000001e1f262fcfcfcf261f1f2f0000000000000000000000001e1f1f2f00000000000000000000000000003d3d3d3d3f000000
 203f0000000000cfcf222222220f00000000002220202020202020202020203f2929cf001e1f1f1f1f1f1f1f1f1f1f1f2f00000d1e1f1f1f222020203f00000000000000000000000000cf000000cf2222220f00cfcf2222220f0000000000000000000000002222220f00000000000000000000000000002d2b2c2d3f000000
-203f00000000000000000000000000000000000020202020202020202020203f2929cf1e2222222222222222222222222a2f000d22222222202020203fcf000000000000000000000000000000000000000000cfcfcf000000000000000000000000000000000000000d0000000000000000001e1f1f1f1f2d3b3c2d2a2f0000
+203f00000000000d00000000000000000000000020202020202020202020203f2929cf1e2222222222222222222222222a2f000d22222222202020203fcf000000000000000000000000000000000000000000cfcfcf00000000000000000000000d0d0000000000000d0000000000000000001e1f1f1f1f2d3b3c2d2a2f0000
 202a1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f20202020202020202020202a1f1f1f22202020202020202020202020222a2f0d20202020202020203fcfcfcfcfcfcf0000000000000000001e1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f2f000000000000000000000000000000222222222222222222223f0000
 20222222222222222222222222222222222222222020202020202020202020222222222020202020202020202020202020220f0d20202020202020200fcfcfcfcfcfcfcfcfcfcfcfcfcfcfcf22222222222222222222222222222222222222222222223f000000000000000000000000000000202020202020202020203f0000
 0000000000000000000000000000000000000000000000003900370000003a0000000000000000000000000000000000000000000000000000cfcf000000000000000000000000000000cfcf20202020202020202020202020202020202020202020203f000000000000000000000000000000202020202020202020200f0000
@@ -1517,10 +1616,10 @@ __sfx__
 0105000029750287502675024750000000000000000000001c6531a63318613146031360311603116030000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 010200002422024230242402425025250282502c2502f250002000020000200002000020000200002000020000200002000020000200002000020000200002000000000000000000000000000000000000000000
 0003000015050180501b0501f05000000000000000000000180501c0501e050210502305023050230001f00000000000000000015000180001b0001f00000000000000000000000295001d5000f5000250000000
-010c00001e04323043230431070010700107001070000700007030070300703007030070300703007030070300703007030070300703007030070300703007030070300703007030070300703007030070300703
+010c000018043210432b04330043390433b0430070300703007030070300703007030070300703007030070300703007030070300703007030070300000000000000000000000000000000000000000000000000
 010a0000230430e600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 011000002505310600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-010500002875024750207502075022750277502c7502e730147000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000500002875024750207502075022750277502c7502e7301470000000000000000000000000000000000000287502b050290502b050260502a0502c7502e7300000000000000000000000000000000000000000
 __music__
 01 00010444
 02 02030444
