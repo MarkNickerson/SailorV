@@ -1,5 +1,6 @@
 Sounds:
 63 (0-8) health pickup
+62 (1) menu sound (2) menu select/close
 60 (0,1,2 [finisher]) Hit
 59 (0-4) ninja throw (8-14) jump (16-26) respawn 
 58 (0-8) player shield activate

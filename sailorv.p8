@@ -24,6 +24,11 @@ cam = {
   y = 0
 }
 
+-- setting this to true shows the instructions menu and siabled the current state's updates and draws
+is_showing_instructions = false 
+instructions_page = 0
+num_instruction_pages = 2  -- how many pages to cycle through
+
 state = game_states.splash
 num_lives = 3
 next_state = game_states.splash -- level to load after loading screen
@@ -617,9 +622,15 @@ function _init()
     cls()
     camera(0, 0)
     change_music(music_states.splash_screen)
+    menuitem(1, "controls", function() show_instructions() end)
 end
 
 function _update60()
+    if is_showing_instructions then
+        -- wait until instructions are closed
+        update_instructions()
+        return
+    end
     if state == game_states.splash then
         update_splash()
     elseif state == game_states.loading_screen then
@@ -635,7 +646,11 @@ end
 
 function _draw()
     cls()
-
+        if is_showing_instructions then
+        -- wait until instructions are closed
+            draw_instructions()
+        return
+    end
     if state == game_states.splash then
         draw_splash()
     elseif state == game_states.loading_screen then
@@ -873,6 +888,8 @@ function update_splash()
     -- usually we want the player to press one button
      if btnp(5) then
          change_state(game_states.level1)
+     elseif btnp(4) then
+         is_showing_instructions = true
      end
      t+= 1
 end
@@ -906,13 +923,15 @@ function draw_splash()
   if(t % 60 >= 10) then
     local text = "press x to play"
     write(text, text_x_pos(text), 72,7)
+    text = "press z for controls"
+    write(text, text_x_pos(text), 80,7)
   end
 end
 
 -- loading
 
 function update_loading()
-    -- after enough time has passed, move on to the level
+    -- after enough time has passed or player, move on to the level
      if time() > loading_end_time then
          change_state(next_state)
      end
@@ -1072,7 +1091,6 @@ function draw_game()
   end
   draw_player()
 
-
   --
  write('combo: '..player.combo.attac,cam.x,0,7)
  write('damage:',cam.x,8,7)
@@ -1093,6 +1111,92 @@ end
   draw_hearts()
   draw_lives()
   camera(0,0)
+end
+
+-- instructions
+
+function show_instructions()
+    is_showing_instructions = true
+    instructions_page = 0
+end
+
+function draw_instructions()
+
+    if instructions_page == 0 then
+        local header = 'controls'
+        write(header, text_x_pos(header), 10, 7)
+
+        local movement_text = "\139 \145  move left and right"
+        write(movement_text, 10, 25, 7)
+
+        local jump_text = "\148     jump"
+        write(jump_text, 10, 35, 7)
+
+        local shield_text = "\131     block"
+        write(shield_text, 10, 45, 7)
+
+        local punch_text = "z      punch"
+        write(punch_text, 10, 55, 7)
+
+        local kick_text = "x      kick"
+        write(kick_text, 10, 65, 7)
+
+        local block_info_text1 = 'note: your block does not last'
+        write(block_info_text1, text_x_pos(block_info_text1), 80, 7)
+
+        local block_info_text2 = 'forever and needs to recharge'
+        write(block_info_text2, text_x_pos(block_info_text2), 90, 7)
+
+        local more_info_text = 'press x for combo info'
+        write(more_info_text, text_x_pos(more_info_text), 110, 7)
+
+        local exit_text = 'press z to return to game'
+        write(exit_text, text_x_pos(exit_text), 120, 7)
+    elseif instructions_page == 1 then
+        local header = 'combos'
+        write(header, text_x_pos(header), 10, 7)
+
+        local combo_text1 = 'use different combos of punch +'
+        write(combo_text1, text_x_pos(combo_text1), 25, 7)
+
+        local combo_text2 = 'kick for different situations'
+        write(combo_text2, text_x_pos(combo_text2), 35, 7)
+
+        local example_text = 'examples:'
+        write(example_text, text_x_pos(example_text), 50, 7)
+
+        local sample_combo1 = "xzzx - slow but powerful combo"
+        write(sample_combo1, text_x_pos(sample_combo1), 60, 7)
+        
+        local sample_combo2 = "zzzz - fast but weak combo"
+        write(sample_combo2, text_x_pos(sample_combo2), 70, 7)
+
+        local try_text1 = "try different combos and"
+        write(try_text1, text_x_pos(try_text1), 85, 7)
+
+        local try_text2 = "see what works best!"
+        write(try_text2, text_x_pos(try_text2), 95, 7)
+
+        local more_info_text = 'press x for control info'
+        write(more_info_text, text_x_pos(more_info_text), 110, 7)
+
+        local exit_text = 'press z to return to game'
+        write(exit_text, text_x_pos(exit_text), 120, 7)
+    else
+        throw("unknown instruction page")
+    end
+end
+
+function update_instructions()
+    if btnp(4) then
+      -- resume game
+      play_sound_effect(sound_effects.menu_close)
+      is_showing_instructions = false
+    elseif btnp(5) then
+        -- cycle through instructions
+        play_sound_effect(sound_effects.menu_sound)
+        instructions_page = (instructions_page + 1) % num_instruction_pages
+    end
 end
 
 
@@ -1440,6 +1544,8 @@ sound_effects = {
   health_pickup = 8,
   checkpoint = 9,
   level_start = 10,
+  menu_sound = 11,
+  menu_close = 12,
 }
 
 -- call this to change music based on given music_state
@@ -1524,6 +1630,14 @@ function play_sound_effect(sound_effect)
       length = 10
       offset = 16
       channel_num = 2
+    elseif sound_effect == sound_effects.menu_sound then
+      sfx_num = 62
+      length = 1
+      offset = 1
+    elseif sound_effect == sound_effects.menu_close then
+      sfx_num = 62
+      length = 1
+      offset = 2
     else
       throw("unknown sound effect")
     end
@@ -1773,7 +1887,7 @@ __sfx__
 0103000015050180501b0501f05000000000000000000000180501c0501e050210502305023050230001f0000b5700b570105701057015570155701a5701a5701f5701f57024570295001d5000f5000250000000
 010c000018063210632b06330063390633b0630070300703007030070300703007030070300703007030070300703007030070300703007030070300000000000000000000000000000000000000000000000000
 010a0000230430e600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-011000002505310600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0110000025053280202d0200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 000500002875024750207502075022750277502c7502e7301470000000000000000000000000000000000000287502b050290502b050260502a0502c7502e7300000000000000000000000000000000000000000
 __music__
 01 00010444
