@@ -211,7 +211,6 @@ function move_player()
 
   accel = 0.25
 
-
   --idle
   idle()
 
@@ -259,8 +258,7 @@ function move_player()
             kick()
             player.kicktimer -= 1
         end
-    end
-
+end
     end
     else player.last = false
     blocking = false
@@ -338,6 +336,10 @@ else
     --player.y = 120
   --end
   player.time+=1
+  
+  if dmgtimer > 0 then
+        dmgtimer -= 1
+    end
 
   if(brawl_clear == false and brawl_spawn == true) then
     if player.x <= brawl_bounds.x - 88 then
@@ -444,14 +446,19 @@ function obs_collision(obj1, obj2)
           else
             f.x += 6.5
           end
-        end
+    end
+        showdmg = true
+        dmgtimer = 20
+        dmg = {}
+        dmg.x = f.x-2
+        dmg.y = f.y - 22
         if(f.health) then
           f.health -= obj2.combo.dmg
           play_sound_effect(sound_effects.enemy_damaged)
-          if f.health <= 0 then
+        end
+        if f.health <= 0 then
             del(obj1, f)
           end
-        end
       end
 
 
@@ -576,6 +583,8 @@ end
 -- pico8 game funtions
 
 function _init()
+    showdmg = false
+    dmgtimer = 0
     t = 0
     taking_damage = false
     enemycount = 0
@@ -916,21 +925,21 @@ function draw_loading()
       local plot3 = ""
       local plot4 = ""
       if next_state == game_states.level1 then
-          plot1 = "oh no!"
-          plot2 = "deityzilla and his ninjas"
+          plot1 = "oh no!" 
+          plot2 = "deityzilla and his ninjas" 
           plot3 = "are attacking the city! it's"
           plot4 = "up to sailor v to stop them!"
       elseif next_state == game_states.level2 then
-          plot1 = "oh no! big mech has captured"
+          plot1 = "oh no! big mech has captured" 
           plot2 = "sailor v! break out of the"
           plot3 = "dungeon and stop him"
           plot4 = "from destroying the city!"
       elseif next_state == game_states.level3 then
-          plot1 = "sailor v has found the "
+          plot1 = "sailor v has found the " 
           plot2 = "evil robot factory! time to"
           plot3 = "teach them a lesson!"
       elseif next_state == game_states.level4 then
-          plot1 = "oh no!"
+          plot1 = "oh no!" 
           plot2 = "big mech is self destructing!"
           plot3 = "get out of there!"
       else
@@ -942,7 +951,7 @@ function draw_loading()
       write(plot4, text_x_pos(plot4), 72,7)
     end
 
-
+   
 end
 
 -- game
@@ -1035,11 +1044,15 @@ function draw_game()
 
 
   --
- print('combo: '..player.combo.attac,cam.x,0,7)
- print('damage:',cam.x,8,7)
+ write('combo: '..player.combo.attac,cam.x,0,7)
+ write('damage:',cam.x,8,7)
  if player.combo.dmg then
- print(player.combo.dmg, cam.x+28,8,7)
-    end
+ write(player.combo.dmg, cam.x+28,8,7)
+  if dmgtimer > 0 then
+    write(-player.combo.dmg,dmg.x, dmg.y,8)
+ end
+end
+
  -- print('combo timer:'..player.combotimer,cam.x,8,7)
  -- print(player.incombo,cam.x,16,7)
   -- print(brawl_clear, cam.x + 5,24,0)
