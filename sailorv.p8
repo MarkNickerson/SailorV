@@ -25,7 +25,7 @@ cam = {
 }
 
 -- setting this to true shows the instructions menu and siabled the current state's updates and draws
-is_showing_instructions = false 
+is_showing_instructions = false
 instructions_page = 0
 num_instruction_pages = 2  -- how many pages to cycle through
 
@@ -375,23 +375,31 @@ else
   --   zone = 2
   --   ninjaspawn = 0
   --
-  --   cur_checkpoint.x = 44
-  --   cur_checkpoint.y = 20
+  --   cur_checkpoint.x = 44*8
+  --   cur_checkpoint.y = 20*8
+  --
+  --   brawl_spawn = false
+  --
+  --   instantiate_level_obs()
   -- end
 
 
-  -- if(solid(player, player.x, player.y-0.5, 7) and zone == 1) then
-  --   player.x=40*8
-  --   player.y=21*8
-  --
-  --   cam.x = player.x
-  --   cam.y = 16*8
-  --   zone = 2
-  --   ninjaspawn = 0
-  --
-  --   cur_checkpoint.x = player.x
-  --   cur_checkpoint.y = player.y
-  -- end
+  if(solid(player, player.x, player.y-0.5, 7) and zone == 1) then
+    player.x=40*8
+    player.y=21*8
+
+    cam.x = 296
+    cam.y = 16*8
+    zone = 2
+    ninjaspawn = 0
+
+    cur_checkpoint.x = 39*8
+    cur_checkpoint.y = 20*8
+
+    brawl_spawn = false
+
+    instantiate_level_obs()
+  end
 
   if(solid(player, player.x, player.y-0.5, 7) and zone == 2) then
     change_state(game_states.win_screen)
@@ -850,7 +858,7 @@ function update_ninja(ninja)
 
   ninja.dy+=ninja.gravity
   -- delete ninja if it falls into the abyss
-  if((ninja.y >= 150 and ninja.y <= 155) or (ninja.y >= 260 and ninja.y <= 265)) then
+  if((ninja.y >= 150 and ninja.y <= 155) or (ninja.y >= 260 and ninja.y <= 265) or ninja.health == nil) then
     del(allninjas, ninja)
   end
 end
@@ -1026,9 +1034,9 @@ function update_game()
       ninjaspawn += 50
       ninjaspawn += flr(rnd(200))
     elseif (zone == 2) then
-      make_ninja(player.x + 100, 180, 10)
-      ninjaspawn += 50
-      ninjaspawn += flr(rnd(200))
+      -- make_ninja(player.x + 100, 180, 10)
+      -- ninjaspawn += 50
+      -- ninjaspawn += flr(rnd(200))
     end
 
   end
@@ -1044,7 +1052,10 @@ function update_game()
   if(player.x >= 700 and player.x <= 750 and zone == 1) then
     spawnbrawl(700, 0)
   end
-  if (player.x >= 500 and player.x <= 550 and zone == 1) then
+  if(player.x >= 712 and player.x <= 722 and zone == 2) then
+    spawnbrawl(712, 180)
+  end
+  if (player.x >= 500 and player.x <= 550 and zone == 1) or (player.x >= 300 and player.x <= 400 and zone == 2) then
     brawl_spawn = false
   end
   t+= 1
@@ -1114,10 +1125,10 @@ function draw_game()
   draw_player()
 
   --
- write('combo: '..player.combo.attac,cam.x,0,7)
- write('damage:',cam.x,8,7)
+ --write('combo: '..player.combo.attac,cam.x,cam.y+0,7)
+ --write('damage:',cam.x,cam.y+8,7)
  if player.combo.dmg then
- write(player.combo.dmg, cam.x+28,8,7)
+ --write(player.combo.dmg, cam.x+28,cam.y+8,7)
   if dmgtimer > 0 then
     write(-player.combo.dmg,dmg.x, dmg.y,8)
  end
@@ -1189,7 +1200,7 @@ function draw_instructions()
 
         local sample_combo1 = "xzzx - slow but powerful combo"
         write(sample_combo1, text_x_pos(sample_combo1), 60, 7)
-        
+
         local sample_combo2 = "zzzz - fast but weak combo"
         write(sample_combo2, text_x_pos(sample_combo2), 70, 7)
 
@@ -1316,8 +1327,9 @@ end
 
 function draw_arrow()
   if drawArrow == true then
-    if time() % 5 >= 0 then
-      spr(169, cam.x + 100, cam.y + 50, 2, 2)
+    spr(169, cam.x + 100, cam.y + 50, 2, 2)
+    if time() % 7 == 0 then
+      drawArrow = false
     end
   end
 
@@ -1359,7 +1371,7 @@ end
 -- draw lives ui
 function draw_lives()
     local text = num_lives.."x"
-    write(text, cam.x+100, 12, 7)
+    write(text, cam.x+100, cam.y+12, 7)
     spr(3, cam.x+110, 10)
 end
 
@@ -1367,13 +1379,31 @@ function instantiate_level_obs()
   -- location to spawn first ninja
   ninjaspawn = 0
 
-  make_ninja(469, 0) -- because dan wanted a ninja here
+  if (zone == 1) then
+    make_ninja(469, 0, 10) -- because dan wanted a ninja here
 
-  create_obs(health_pack, 39, 180, 4, 1, 4, 1, 1)
-  create_obs(health_pack, 39, 300, 4, 1, 4, 1, 1)
-  create_obs(health_pack, 39, 400, 4, 1, 4, 1, 1)
-  create_obs(health_pack, 39, 500, 4, 1, 4, 1, 1)
-  create_obs(health_pack, 39, 700, 4, 1, 4, 1, 1)
+    create_obs(health_pack, 39, 180, 4, 1, 4, 1, 1)
+    create_obs(health_pack, 39, 300, 4, 1, 4, 1, 1)
+    create_obs(health_pack, 39, 400, 4, 1, 4, 1, 1)
+    create_obs(health_pack, 39, 500, 4, 1, 4, 1, 1)
+    create_obs(health_pack, 39, 700, 4, 1, 4, 1, 1)
+
+  elseif (zone == 2) then
+    create_obs(health_pack, 39, 39*8, 30*8, 1, 4, 1, 1)
+    create_obs(health_pack, 39, 55*8, 17*8, 1, 4, 1, 1)
+    create_obs(health_pack, 39, 66*8, 18*8, 1, 4, 1, 1)
+    create_obs(health_pack, 39, 81*8, 27*8, 1, 4, 1, 1)
+
+    make_ninja(44*8, 30*8, 10)
+    make_ninja(50*8, 25*8, 10)
+    make_ninja(59*8, 20*8, 10)
+    make_ninja(67*8, 30*8, 10)
+
+    --make_ninja(72*8, 20*8, 10)
+    make_ninja(85*8, 24*8, 10)
+    make_ninja(105*8, 28*8, 10)
+    make_ninja(123*8, 25*8, 10)
+  end
 
 end
 
@@ -1674,7 +1704,7 @@ function play_sound_effect(sound_effect)
       offset = 2
     elseif sound_effect == sound_effects.big_footstep then
       sfx_num = 61
-      length = 3 
+      length = 3
       offset = 0
     elseif sound_effect == sound_effects.explosion then
       sfx_num = 55
@@ -1862,14 +1892,14 @@ __map__
 0000000000000000000000000000000000000000000000003700003a00000000cfcf37cfcfb3b29090b6b79090929393b3b3b394a3939391b394949494b3a393b3a293939394a8b8b80f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000cf
 0000000000000000000000000000000000000000000000000000000000000000cfcfcfcfcfb394949494949494b29293b3a2939393939194b3b3b3b3b3a39393b3b290929393b3953f000000000000000000000000000000000000000000000000000000000000000000000d0d0d0d0d0d0000000000000000000000000000cf
 0000000000000000000000000000000000000000003700cf00000000003a0039cfcf37cf0db3b3b3b3b3b3b3b394a393b3a293a4a59394b3b3b3b3b3a3939393b39494a3939393953f00000000000000000000000000000000cfcfcfcfcfcfcf000000000000000000000000cfcfcfcfcfcf000000000000000000000000cfcf
-0000000000000000000000000000000000000000000000370000000000000000cfcfcfcf0db3b3b3b3b3b3b3b3a39393b3a293b4b5939393b3b3b3a393939393b3b3a393939393953f00000000000000000000000000000000cfcfcfcfcfcfcf000000000000000000000000cfcfcfcfcfcfcf0000000000000000000000cfcf
-0000000000000000000000000000000000000000000039000000003837000037cf37cfcfcf2da29393a0a19393939391b3b2909092939393b3a2939393939393b3a29393939190953f000000000000000000000000000000000000000000cfcf0000000000000000000000000000cf000000cfcfcfcfcf00001e1f1f1f2fcfcf
+0000000000000000000000000000000000000000000000370000000000000000cfcfcfcf0db3b3b3b3b3b3b3b3a39393b3a293b4b5939393b3b3b3a393939393b3b3a393939393953f00000000000000000000001e1f1f1f2fcfcfcfcfcfcfcf000000000000000000000000cfcfcfcfcfcfcf0000000000000000000000cfcf
+0000000000000000000000000000000000000000000039000000003837000037cf37cfcfcf2da29393a0a19393939391b3b2909092939393b3a2939393939393b3a29393939190953f0000000000000000000000222222220f0000000000cfcf0000000000000000000000000000cf000000cfcfcfcfcf00001e1f1f1f2fcfcf
 0000003032000000000000000000000000000000000000000000000000000000cfcfcf000db3a29393b0b19393939194b3949494b2929393b3a2939393939393b3a29393939494953f00000000000000000000000000cfcfcfcfcfcfcfcfcfcfcfcfcf0d0000000000000000000000000000cfcfcfcfcf00003d3d3d3d3fcfcf
-00000033340000003031320000000000000000000000003800003a0000000000cfcfcf000db3a2a4a59393a4a59394b3b3b3b3b394b29293b3a2a4a593a4a593b3b2909293b3b3953f00000000000000000000000000cfcfcfcfcfcfcfcfcfcfcfcfcf0d0000000000000000000000000e0e0e0000000000002d2b2c2d3fcfcf
-0030323334000000333534000000000000000000000000000000000000000000cfcfcfcf0db3a2b4b59393b4b593b3b3b3b3b3b3b394a393b3a2b4b593b4b593b39494a39393b3953f0d0d0d000000cfcfcfcfcfcf00cfcfcfcfcfcfcfcfcfcfcfcfcf0d00000000000000001e1f1f1f1f1f1f1f1f1f1f1f1f2d3b3c2d3fcfcf
-0033343334303132333534000030320000000000000000000000000000000000cfcfcfcf0db3a29393939393939393939393939393939393b3a293939393939393939393939393953f0d0d0d00000000cfcfcfcfcf00cfcfcfcfcfcfcfcfcfcfcfcfcf0000cfcfcfcfcf000022222222222222222222222222222222223fcfcf
-323336313132353433353400003334302d2d2d000000002d0000000000000000cfcfcfcf0db3b29090909090909090909090909090909090b3b290909090909090909090909090952a1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f2f0000cfcfcfcfcf0d0020202020202020202020202020202020203fcfcf
-343333353534353433353400003334332d2d2d000000002d0000000000000000cfcfcfcf0db3949494949494949494949494949494949494b39494949494949494949494949494b322222222222222222222222222222222222222222222222222223f0000202020200f0d0020202020202020202020202020202020203fcfcf
+00000033340000003031320000000000000000000000003800003a0000000000cfcfcf000db3a2a4a59393a4a59394b3b3b3b3b394b29293b3a2a4a593a4a593b3b2909293b3b3953f000000000000001e1f1f2f0000cfcf1e1f1f2fcfcfcfcfcfcfcf0d0000000000000000000000000e0e0e0000000000002d2b2c2d3fcfcf
+0030323334000000333534000000000000000000000000000000000000000000cfcfcfcf0db3a2b4b59393b4b593b3b3b3b3b3b3b394a393b3a2b4b593b4b593b39494a39393b3953f0d0d0d000000cf2222220fcf00cfcf2222220fcfcfcfcfcfcfcf0d000000001e1f1f2fcf1e1f1f1f1f1f1f1f1f1f1f1f2d3b3c2d3fcfcf
+0033343334303132333534000030320000000000000000000000000000000000cfcfcfcf0db3a29393939393939393939393939393939393b3a293939393939393939393939393953f0d0d0d00000000cfcfcfcfcf00cfcfcfcfcfcfcfcfcfcfcfcfcf001e1f1f2f2222223fcf222222222222222222222222222222223fcfcf
+323336313132353433353400003334302d2d2d000000002d0000000000000000cfcfcfcf0db3b29090909090909090909090909090909090b3b290909090909090909090909090952a1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f2f002222223f2020203fcf204b4c20204b4c20204b4c20204b4c203fcfcf
+343333353534353433353400003334332d2d2d000000002d0000000000000000cfcfcfcf0db3949494949494949494949494949494949494b39494949494949494949494949494b322222222222222222222222222222222222222222222222222223f002020203f2020203fcf205b5c20205b5c20205b5c20205b5c203fcfcf
 __sfx__
 01180020155551855515555185551555518555155551855510555175551355517555105551755513555175551055517555135551755510555175551355517555155551c555185551c555155551c555185551c555
 011800001f5501f5501f5501d5501d5501d5501c550185001a5501a5501d5501d55018500175501a5501d5502155021550215502355023550215501f5501d5501c5501c5501f5501f5501850013550185501c550
