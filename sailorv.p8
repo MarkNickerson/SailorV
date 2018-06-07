@@ -24,6 +24,11 @@ cam = {
   y = 0
 }
 
+-- setting this to true shows the instructions menu and siabled the current state's updates and draws
+is_showing_instructions = false 
+instructions_page = 0
+num_instruction_pages = 2  -- how many pages to cycle through
+
 state = game_states.splash
 num_lives = 3
 next_state = game_states.splash -- level to load after loading screen
@@ -624,9 +629,15 @@ function _init()
     cls()
     camera(0, 0)
     change_music(music_states.splash_screen)
+    menuitem(1, "controls", function() show_instructions() end)
 end
 
 function _update60()
+    if is_showing_instructions then
+        -- wait until instructions are closed
+        update_instructions()
+        return
+    end
     if state == game_states.splash then
         update_splash()
     elseif state == game_states.loading_screen then
@@ -642,7 +653,11 @@ end
 
 function _draw()
     cls()
-
+        if is_showing_instructions then
+        -- wait until instructions are closed
+            draw_instructions()
+        return
+    end
     if state == game_states.splash then
         draw_splash()
     elseif state == game_states.loading_screen then
@@ -882,6 +897,8 @@ function update_splash()
     -- usually we want the player to press one button
      if btnp(5) then
          change_state(game_states.level1)
+     elseif btnp(4) then
+         is_showing_instructions = true
      end
      t+= 1
 end
@@ -915,13 +932,15 @@ function draw_splash()
   if(t % 60 >= 10) then
     local text = "press x to play"
     write(text, text_x_pos(text), 72,7)
+    text = "press z for controls"
+    write(text, text_x_pos(text), 80,7)
   end
 end
 
 -- loading
 
 function update_loading()
-    -- after enough time has passed, move on to the level
+    -- after enough time has passed or player, move on to the level
      if time() > loading_end_time then
          change_state(next_state)
      end
@@ -1094,7 +1113,6 @@ function draw_game()
 
   draw_player()
 
-
   --
  write('combo: '..player.combo.attac,cam.x,0,7)
  write('damage:',cam.x,8,7)
@@ -1115,6 +1133,92 @@ end
   draw_hearts()
   draw_lives()
   camera(0,0)
+end
+
+-- instructions
+
+function show_instructions()
+    is_showing_instructions = true
+    instructions_page = 0
+end
+
+function draw_instructions()
+
+    if instructions_page == 0 then
+        local header = 'controls'
+        write(header, text_x_pos(header), 10, 7)
+
+        local movement_text = "\139 \145  move left and right"
+        write(movement_text, 10, 25, 7)
+
+        local jump_text = "\148     jump"
+        write(jump_text, 10, 35, 7)
+
+        local shield_text = "\131     block"
+        write(shield_text, 10, 45, 7)
+
+        local punch_text = "z      punch"
+        write(punch_text, 10, 55, 7)
+
+        local kick_text = "x      kick"
+        write(kick_text, 10, 65, 7)
+
+        local block_info_text1 = 'note: your block does not last'
+        write(block_info_text1, text_x_pos(block_info_text1), 80, 7)
+
+        local block_info_text2 = 'forever and needs to recharge'
+        write(block_info_text2, text_x_pos(block_info_text2), 90, 7)
+
+        local more_info_text = 'press x for combo info'
+        write(more_info_text, text_x_pos(more_info_text), 110, 7)
+
+        local exit_text = 'press z to return to game'
+        write(exit_text, text_x_pos(exit_text), 120, 7)
+    elseif instructions_page == 1 then
+        local header = 'combos'
+        write(header, text_x_pos(header), 10, 7)
+
+        local combo_text1 = 'use different combos of punch +'
+        write(combo_text1, text_x_pos(combo_text1), 25, 7)
+
+        local combo_text2 = 'kick for different situations'
+        write(combo_text2, text_x_pos(combo_text2), 35, 7)
+
+        local example_text = 'examples:'
+        write(example_text, text_x_pos(example_text), 50, 7)
+
+        local sample_combo1 = "xzzx - slow but powerful combo"
+        write(sample_combo1, text_x_pos(sample_combo1), 60, 7)
+        
+        local sample_combo2 = "zzzz - fast but weak combo"
+        write(sample_combo2, text_x_pos(sample_combo2), 70, 7)
+
+        local try_text1 = "try different combos and"
+        write(try_text1, text_x_pos(try_text1), 85, 7)
+
+        local try_text2 = "see what works best!"
+        write(try_text2, text_x_pos(try_text2), 95, 7)
+
+        local more_info_text = 'press x for control info'
+        write(more_info_text, text_x_pos(more_info_text), 110, 7)
+
+        local exit_text = 'press z to return to game'
+        write(exit_text, text_x_pos(exit_text), 120, 7)
+    else
+        throw("unknown instruction page")
+    end
+end
+
+function update_instructions()
+    if btnp(4) then
+      -- resume game
+      play_sound_effect(sound_effects.menu_close)
+      is_showing_instructions = false
+    elseif btnp(5) then
+        -- cycle through instructions
+        play_sound_effect(sound_effects.menu_sound)
+        instructions_page = (instructions_page + 1) % num_instruction_pages
+    end
 end
 
 
@@ -1471,6 +1575,11 @@ sound_effects = {
   health_pickup = 8,
   checkpoint = 9,
   level_start = 10,
+  menu_sound = 11,
+  menu_close = 12,
+  big_footstep = 13,
+  explosion = 14,
+  fireball = 15,
 }
 
 -- call this to change music based on given music_state
@@ -1555,6 +1664,26 @@ function play_sound_effect(sound_effect)
       length = 10
       offset = 16
       channel_num = 2
+    elseif sound_effect == sound_effects.menu_sound then
+      sfx_num = 62
+      length = 1
+      offset = 1
+    elseif sound_effect == sound_effects.menu_close then
+      sfx_num = 62
+      length = 1
+      offset = 2
+    elseif sound_effect == sound_effects.big_footstep then
+      sfx_num = 61
+      length = 3 
+      offset = 0
+    elseif sound_effect == sound_effects.explosion then
+      sfx_num = 55
+      length = 10
+      offset = 8
+    elseif sound_effect == sound_effects.fireball then
+      sfx_num = 61
+      length = 3
+      offset = 8
     else
       throw("unknown sound effect")
     end
@@ -1564,9 +1693,9 @@ function play_sound_effect(sound_effect)
 
 -->8
 -- win screen
-win_ticks_per_movement = 4
+win_ticks_per_movement = 3
 cur_win_tick = 0
-credits = {"the city is safe!", "", "", "art by:", "jamie chen", "sydney schiller", "",  "music by:", "davey jay belliss", "", "programmed by:", "davey jay belliss", "jessica hsieh",  "dan nguyen", "mark nickerson", "sydney schiller", "", "special thanks", "joshua mccoy", "", "", "", "", "", "", "", "c'est la vie"}
+credits = {"the city is safe!", "", "art by:", "jamie chen", "sydney schiller", "",  "music by:", "davey jay belliss", "", "programmed by:", "davey jay belliss", "jessica hsieh",  "dan nguyen", "mark nickerson", "sydney schiller", "", "special thanks", "joshua mccoy", "", "", "", "", "", "", "", "c'est la vie"}
 scroll_speed = 1 -- how many pixels a credit moves per draw
 credits_spacing = 8  -- how far apart each credit is vertically
 base_credits_pos = 120
@@ -1787,24 +1916,24 @@ __sfx__
 010e000028500295002850029500285001f50018500235000000000000255402554023540235400000024500265002850018500000000000000000000000000000000000002a5402a54028540285400000000000
 010e000028540265402b500285402854028500285002850528540265402b50028540285402850028500285052854026540285402b5402b5002d5402b5402f540005002f540245002f5402d5402d5002b54028540
 010e00000044000440004000c440004000c44000440004000b4400b4400b4000c4400b4000c4400b440044000944009440094000b4400b4400b4000c440044000b4400b4400b4000c4400c4400c4001044018400
-01120000280200000028020000002b020000002902000000280200000026020000002402000000280202802128021280210000000000240200000026020260212602100000260200000026020000000000000000
-01120000280200000028020000002b02000000290200000028020000002602000000240200000028020280212802128021000000000024020000002b0202b0212b0212b0212b021000002d020000000010000100
-011200002b020000002b020000002d020000002b020000002b00029020280200000029020000002d0202d0212d0212d021000000000024020000002b0202b0212b0212b0212b021000002d020000000000000000
-01120000280200000028020000002b020000002902000000280200000026020000002402000000280202802128021280210000000000240200000026020260202402000000240200000000000000000000000000
-01120000005000050000500005002d5250050000500005002452500500245250050000500005000050000500005000050000500005002d5250050000500005002452500500245250050000500005000050000500
-011200001851018511185111851118511185111a5101a5111a5111a5111a5111a5111a5111a5111c5101c5111c5111c5111c5111c5111c5111c5111a5101a5111a5111a5111a5111a5111a5111a5111a5111a511
-011200001851018511185111851118511185111a5101a5111a5111a5111a5111a5111a5111a5111c5101c5111c5111c5111c5111c5111c5111c51100000000001851000000185100000000000000000000000000
-011200001851018511185111851118511185111a5101a5111a5111a5111a5111a5111a5111a5111c5101c5111c5111c5111c5111c5111c5111c5111f5101f5111f5111f5111f5111f5111f5111f5111f5111f511
+010d0000280200000028020000002b020000002902000000280200000026020000002402000000280202802128021280210000000000240200000026020260212602100000260200000026020000000000000000
+010d0000280200000028020000002b02000000290200000028020000002602000000240200000028020280212802128021000000000024020000002b0202b0212b0212b0212b021000002d020000000010000100
+010d00002b020000002b020000002d020000002b020000002b00029020280200000029020000002d0202d0212d0212d021000000000024020000002b0202b0212b0212b0212b021000002d020000000000000000
+010d0000280200000028020000002b020000002902000000280200000026020000002402000000280202802128021280210000000000240200000026020260202402000000240200000000000000000000000000
+010d0000005000050000500005002d5250050000500005002452500500245250050000500005000050000500005000050000500005002d5250050000500005002452500500245250050000500005000050000500
+010d00001851018511185111851118511185111a5101a5111a5111a5111a5111a5111a5111a5111c5101c5111c5111c5111c5111c5111c5111c5111a5101a5111a5111a5111a5111a5111a5111a5111a5111a511
+010d00001851018511185111851118511185111a5101a5111a5111a5111a5111a5111a5111a5111c5101c5111c5111c5111c5111c5111c5111c51100000000001851000000185100000000000000000000000000
+010d00001851018511185111851118511185111a5101a5111a5111a5111a5111a5111a5111a5111c5101c5111c5111c5111c5111c5111c5111c5111f5101f5111f5111f5111f5111f5111f5111f5111f5111f511
 011200001f1401f1001f1001d1401d1001d1001c1401c1001a1401a1001d1401d1001f20013140171401a1401d1401d1001f1401d1401c1401a1401a1001c1401c100181001c1001c1000000013140171401a140
 000a00060e7501175014750127500e7500d75002700027000270000700007000c70000700007000c70000700007000c70000700007000c70000700007000c7000070000700007000070000700007000070000700
-000400000763008600026000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0104000007630086000260000000000000000000000000002d650186501d6501c6501a65018650056500465002650006500465000000000000000000000000000000000000000000000000000000000000000000
 00020000155501a5501f5502155000500005000050000500005000050000500005000050000500005000050000500005000050000500005000050000500005000050000500005000050000500005000050000500
 0105000029750287502675024750000000000000000000001c6531a63318613146031360311603116030000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 010200002422024230242402425025250282502c2502f250002000020000200002000020000200002000020000200002000020000200002000020000200002000000000000000000000000000000000000000000
 0103000015050180501b0501f05000000000000000000000180501c0501e050210502305023050230001f0000b5700b570105701057015570155701a5701a5701f5701f57024570295001d5000f5000250000000
 010c000018063210632b06330063390633b0630070300703007030070300703007030070300703007030070300703007030070300703007030070300000000000000000000000000000000000000000000000000
-010a0000230430e600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-011000002505310600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+010a00000066000621006110000000000000000000000000006000060000600006000060000600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0110000025053280202d0200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 000500002875024750207502075022750277502c7502e7301470000000000000000000000000000000000000287502b050290502b050260502a0502c7502e7300000000000000000000000000000000000000000
 __music__
 01 00010444

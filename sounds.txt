@@ -1,13 +1,13 @@
 Sounds:
 63 (0-8) health pickup
-60 (0,1,2 [finisher]) Hit
+62 (1) menu sound (2) menu select/close
+61 (0-2) big step (8-10) fireball
 59 (0-4) ninja throw (8-14) jump (16-26) respawn 
 58 (0-8) player shield activate
 57 (0-4) player damaged (8-11) enemy damaged 
-55 (0)   step
+55 (0)   smol step (8-18) explosion
 54 (0-6) shield hold
 blockedhit?
-explosition 
 
 
 SFX:
@@ -20,7 +20,7 @@ SFX:
 29-33 and 53 Final boss
 34-44 Level3
 45-52 ending theme
-54-64 SFX
+54-64 SFX  
 
 Music Patterns:
 0 - 1 Title screen (Moon light Densetsu)
