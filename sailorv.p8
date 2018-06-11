@@ -722,6 +722,10 @@ shuriken = {
   tag = 3
 }
 
+fireball = {
+  tag = 3
+}
+
 allninjas = {
   tag = 2
 }
@@ -742,13 +746,46 @@ function update_shuriken(obj)
    end
   end
 
-  obs_collision(shuriken, player)
+  --obs_collision(shuriken, player) -- O(n^2) smh
  if(t % 6 == 0) then
     if solid(obj, obj.x, obj.y, 1) then
       obj.x = obj.x
       obj.flip = false
     else
       obj.x -= 8 * obj.dx
+
+    end
+  if(obj.flip == true) then
+   obj.flip = false
+  else
+   obj.flip = true
+  end
+ end
+end
+
+function update_fireball(obj)
+  if t - obj.birthdate >= 500 then
+    del(fireball, obj)
+  end
+
+  -- deletes fireball when it goes off screen
+  if(obj.dx < 0) then
+   if (obj.x > (player.x + 128)) then
+    del(fireball, obj)
+   end
+  elseif (obj.dx > 0) then
+   if (obj.x < (player.x - 128)) then
+    del(fireball, obj)
+   end
+  end
+
+ if(t % 6 == 0) then
+    if solid(obj, obj.x, obj.y, 1) then
+      obj.x = obj.x
+      obj.flip = false
+    else
+      obj.x -= 8 * obj.dx
+      obj.y -= 8 * obj.dy
 
     end
   if(obj.flip == true) then
@@ -769,6 +806,7 @@ function create_obs(obj, sprite, x, y, dx, tag, width, height)
   o.x = x
   o.y = y
   o.dx = dx
+  o.dy = dx*dx*(rnd(0.5))-0.25
   o.sprite = sprite
   o.flip = false
   o.tag = tag
@@ -929,53 +967,53 @@ end
 function throw_deityzilla()
    if(deityzilla.is_throwing == true) then
     if(deityzilla.throw_timer == 0) then -- spawn a shuriken once animation finishes
+      deityzilla.sprite = 104
             --play_sound_effect(sound_effects.ninja_throw)
      if(deityzilla.flip) then -- facing right
-      create_obs(shuriken, 95, deityzilla.x+4, deityzilla.y-14, -1, 3, 1, 1) -- last 2 arguments are width and height of 1
+      create_obs(fireball, 95, deityzilla.x+4, deityzilla.y-14, -1, 3, 1, 1) -- last 2 arguments are width and height of 1
      else -- facing left
-      create_obs(shuriken, 95, deityzilla.x-4, deityzilla.y-14, 1, 3, 1, 1) -- last 2 arguments are width and height of 1
+      create_obs(fireball, 95, deityzilla.x-4, deityzilla.y-14, 1, 3, 1, 1) -- last 2 arguments are width and height of 1
      end
      deityzilla.is_throwing = false
         deityzilla.is_walking = true
      deityzilla.throw_mod = 250 + flr(rnd(200))
-     --deityzilla.sprite = 67
-    elseif(deityzilla.throw_timer > 13) then
-     --deityzilla.sprite = 65
+     deityzilla.sprite = 96
     elseif(deityzilla.throw_timer > 0) then
-     --deityzilla.sprite = 66
+      deityzilla.sprite = 104
     end
     deityzilla.throw_timer -= 2
     elseif(t % deityzilla.throw_mod == 0) then -- cannot throw while previous throw is being completed
       deityzilla.is_throwing=true
       deityzilla.is_walking = false
-      deityzilla.throw_timer =20
+      deityzilla.throw_timer = 20
     end
 end
 
 function update_deityzilla()
   throw_deityzilla()
-   if(t % 10 == 0 and deityzilla.sprite != 104) then
+   if(t % 10 == 0 and deityzilla.sprite < 102) then
       deityzilla.sprite = deityzilla.sprite + 2
-    elseif(t % 10 == 0 and deityzilla.sprite == 104) then
+    elseif(t % 10 == 0 and deityzilla.sprite == 102) then
       --play_sound_effect(sound_effects.footstep)
       deityzilla.sprite = 96
     end
 
-  if(player.x < deityzilla.x and deityzilla.dx > -deityzilla.max_dx) then
-   if((deityzilla.x - player.x) < 8) then --player isnt moving, ninja stops at player location
-    deityzilla.dx = 0
-   else
-     deityzilla.flip = false
-      deityzilla.dx-=deityzilla.p_speed
-  end
-  elseif(player.x > deityzilla.x and deityzilla.dx < deityzilla.max_dx) then
-    if((player.x - deityzilla.x) < 16) then
-    deityzilla.dx = 0
-   else
-     deityzilla.flip = true
-     deityzilla.dx += deityzilla.p_speed
-    end
-  end
+  -- deityzilla follows player around (for collision debugging purposes)
+  --if(player.x < deityzilla.x and deityzilla.dx > -deityzilla.max_dx) then
+  -- if((deityzilla.x - player.x) < 8) then --player isnt moving, ninja stops at player location
+  --  deityzilla.dx = 0
+  -- else
+  --   deityzilla.flip = false
+  --    deityzilla.dx-=deityzilla.p_speed
+  --end
+  --elseif(player.x > deityzilla.x and deityzilla.dx < deityzilla.max_dx) then
+  --  if((player.x - deityzilla.x) < 16) then
+  --  deityzilla.dx = 0
+  -- else
+  --   deityzilla.flip = true
+  --   deityzilla.dx += deityzilla.p_speed
+  --  end
+  --end
 
   deityzilla.dy+=deityzilla.gravity
 end
@@ -1130,6 +1168,9 @@ function update_game()
 
   end
   foreach(shuriken, update_shuriken)
+  obs_collision(shuriken, player)
+  foreach(fireball, update_fireball)
+  obs_collision(fireball, player)
   foreach(health_pack, update_health_pack)
   foreach(checkpoint, update_checkpoint)
   move_actor(player)
@@ -1195,6 +1236,7 @@ function draw_game()
   map(0, 0, 0, 0, 128, 32)
   foreach(allninjas, draw_ninja)
   foreach(shuriken, draw_obj)
+  foreach(fireball, draw_obj)
   draw_deityzilla()
   foreach(health_pack, draw_obj)
   foreach(checkpoint, draw_obj)
