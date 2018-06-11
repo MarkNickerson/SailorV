@@ -444,7 +444,7 @@ function solid(obs, x, y, tag)
       return false
     end
   elseif (obs.tag == 7) then --16x16
-    -- dietyzilla
+    -- deityzilla
     local tilex1 = ((x - (x % 16)) / 8)
     local tilex2 = tilex1 + 1
     local tilex3 = tilex1 + 2
@@ -566,7 +566,7 @@ function move_actor(actor)
   -- check actor tag
   -- 1: player
   -- 2: ninja
-  -- 7: dietyzilla
+  -- 7: deityzilla
 
   if(actor.tag == 1) then
     move_player()
@@ -575,7 +575,7 @@ function move_actor(actor)
     update_ninja(actor)
   end
   if(actor.tag == 7) then
-    update_dietyzilla()
+    update_deityzilla()
   end
 
 
@@ -918,8 +918,8 @@ function spawnbrawl(xlock, y_spawn)
   end
 end
 
-function make_dietyzilla(x, y)
-  dietyzilla = {
+function make_deityzilla(x, y)
+  deityzilla = {
     tag=7,
     x=x,                 -- x position
     y=y,                 -- y position
@@ -938,39 +938,39 @@ function make_dietyzilla(x, y)
     throw_timer = 0,
     hearts = 5
   }
-  return dietyzilla
+  return deityzilla
 end
 
-function update_dietyzilla()
+function update_deityzilla()
 
-   if(t % 10 == 0 and dietyzilla.sprite != 104) then
-      dietyzilla.sprite = dietyzilla.sprite + 2
-    elseif(t % 10 == 0 and dietyzilla.sprite == 104) then
+   if(t % 10 == 0 and deityzilla.sprite != 104) then
+      deityzilla.sprite = deityzilla.sprite + 2
+    elseif(t % 10 == 0 and deityzilla.sprite == 104) then
       --play_sound_effect(sound_effects.footstep)
-      dietyzilla.sprite = 96
+      deityzilla.sprite = 96
     end
 
-  if(player.x < dietyzilla.x and dietyzilla.dx > -dietyzilla.max_dx) then
-   if((dietyzilla.x - player.x) < 16) then --player isnt moving, ninja stops at player location
-    dietyzilla.dx = 0
+  if(player.x < deityzilla.x and deityzilla.dx > -deityzilla.max_dx) then
+   if((deityzilla.x - player.x) < 16) then --player isnt moving, ninja stops at player location
+    deityzilla.dx = 0
    else
-     dietyzilla.flip = false
-      dietyzilla.dx-=dietyzilla.p_speed
+     deityzilla.flip = false
+      deityzilla.dx-=deityzilla.p_speed
   end
-  elseif(player.x > dietyzilla.x and dietyzilla.dx < dietyzilla.max_dx) then
-    if((player.x - dietyzilla.x) < 16) then
-    dietyzilla.dx = 0
+  elseif(player.x > deityzilla.x and deityzilla.dx < deityzilla.max_dx) then
+    if((player.x - deityzilla.x) < 16) then
+    deityzilla.dx = 0
    else
-     dietyzilla.flip = true
-     dietyzilla.dx += dietyzilla.p_speed
+     deityzilla.flip = true
+     deityzilla.dx += deityzilla.p_speed
     end
   end
 
-  dietyzilla.dy+=dietyzilla.gravity
+  deityzilla.dy+=deityzilla.gravity
 end
 
-function draw_dietyzilla()
-   spr(dietyzilla.sprite, dietyzilla.x, dietyzilla.y, 2, 2, dietyzilla.flip)
+function draw_deityzilla()
+   spr(deityzilla.sprite, deityzilla.x, deityzilla.y, 2, 2, deityzilla.flip)
 end
 
 
@@ -1094,7 +1094,7 @@ end
 
 function init_game()
   player = make_player(20,1)
-  dietyzilla = make_dietyzilla(100, 0)
+  deityzilla = make_deityzilla(100, 0)
 
   brawl_spawn = false
   brawl_clear = true
@@ -1123,7 +1123,7 @@ function update_game()
   foreach(checkpoint, update_checkpoint)
   move_actor(player)
   foreach(allninjas, move_actor)
-  move_actor(dietyzilla)
+  move_actor(deityzilla)
 
   if(player.x >= 300 and player.x <= 350 and zone == 1) then
     spawnbrawl(300, 0)
@@ -1184,7 +1184,7 @@ function draw_game()
   map(0, 0, 0, 0, 128, 32)
   foreach(allninjas, draw_ninja)
   foreach(shuriken, draw_obj)
-  draw_dietyzilla()
+  draw_deityzilla()
   foreach(health_pack, draw_obj)
   foreach(checkpoint, draw_obj)
   if(blocking == true) then
@@ -1221,8 +1221,8 @@ end
    print(player.x,cam.x + 5,cam.y+40,0)
    print(player.y,cam.x + 5,cam.y+50,0)
   -- print(enemycount,cam.x + 5,48,0)
-  print(dietyzilla.x,cam.x + 5,cam.y+60,0)
-  print(dietyzilla.y,cam.x + 5,cam.y+70,0)
+  print(deityzilla.x,cam.x + 5,cam.y+60,0)
+  print(deityzilla.y,cam.x + 5,cam.y+70,0)
   draw_hearts()
   draw_lives()
   camera(0,0)
