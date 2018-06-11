@@ -424,7 +424,7 @@ end
 
 function solid(obs, x, y, tag)
 
-  if ((obs.tag == 1) or (obs.tag == 2)) or (obs.tag == 6) then -- 16x8 collision
+  if ((obs.tag == 1) or (obs.tag == 2)) or (obs.tag == 6) or (obs.tag == 7) then
     local tilex1 = ((x - (x % 8)) / 8)
     local tilex2 = ((x - (x % 8) + 8) / 8)
     local tiley1 = ((y - (y % 8)) / 8)
@@ -439,21 +439,6 @@ function solid(obs, x, y, tag)
     local tilex1 = ((x - (x % 8)) / 8)
     local tiley1 = ((y - (y % 8)) / 8)
     if (fget(mget(tilex1, tiley1), tag)) then
-      return true
-    else
-      return false
-    end
-  elseif (obs.tag == 7) then --16x16
-    -- deityzilla
-    local tilex1 = ((x - (x % 16)) / 8)
-    local tilex2 = tilex1 + 1
-    local tilex3 = tilex1 + 2
-
-    local tiley1 = ((y - (y % 16)) / 8)
-    local tiley2 = tiley1 - 1
-    local tiley3 = tiley1 - 2
-
-    if (fget(mget(tilex1, tiley1), tag)) or (fget(mget(tilex2, tiley1), tag)) or (fget(mget(tilex3, tiley1), tag)) or (fget(mget(tilex1, tiley2), tag)) or (fget(mget(tilex2, tiley2), tag)) or (fget(mget(tilex3, tiley2), tag)) or (fget(mget(tilex1, tiley3), tag)) or (fget(mget(tilex2, tiley3), tag)) or (fget(mget(tilex3, tiley3), tag)) then
       return true
     else
       return false
@@ -941,8 +926,34 @@ function make_deityzilla(x, y)
   return deityzilla
 end
 
-function update_deityzilla()
+function throw_deityzilla()
+   if(deityzilla.is_throwing == true) then
+    if(deityzilla.throw_timer == 0) then -- spawn a shuriken once animation finishes
+            --play_sound_effect(sound_effects.ninja_throw)
+     if(deityzilla.flip) then -- facing right
+      create_obs(shuriken, 95, deityzilla.x+4, deityzilla.y-14, -1, 3, 1, 1) -- last 2 arguments are width and height of 1
+     else -- facing left
+      create_obs(shuriken, 95, deityzilla.x-4, deityzilla.y-14, 1, 3, 1, 1) -- last 2 arguments are width and height of 1
+     end
+     deityzilla.is_throwing = false
+        deityzilla.is_walking = true
+     deityzilla.throw_mod = 250 + flr(rnd(200))
+     --deityzilla.sprite = 67
+    elseif(deityzilla.throw_timer > 13) then
+     --deityzilla.sprite = 65
+    elseif(deityzilla.throw_timer > 0) then
+     --deityzilla.sprite = 66
+    end
+    deityzilla.throw_timer -= 2
+    elseif(t % deityzilla.throw_mod == 0) then -- cannot throw while previous throw is being completed
+      deityzilla.is_throwing=true
+      deityzilla.is_walking = false
+      deityzilla.throw_timer =20
+    end
+end
 
+function update_deityzilla()
+  throw_deityzilla()
    if(t % 10 == 0 and deityzilla.sprite != 104) then
       deityzilla.sprite = deityzilla.sprite + 2
     elseif(t % 10 == 0 and deityzilla.sprite == 104) then
@@ -951,7 +962,7 @@ function update_deityzilla()
     end
 
   if(player.x < deityzilla.x and deityzilla.dx > -deityzilla.max_dx) then
-   if((deityzilla.x - player.x) < 16) then --player isnt moving, ninja stops at player location
+   if((deityzilla.x - player.x) < 8) then --player isnt moving, ninja stops at player location
     deityzilla.dx = 0
    else
      deityzilla.flip = false
@@ -970,7 +981,7 @@ function update_deityzilla()
 end
 
 function draw_deityzilla()
-   spr(deityzilla.sprite, deityzilla.x, deityzilla.y, 2, 2, deityzilla.flip)
+   spr(deityzilla.sprite, deityzilla.x, deityzilla.y-16, 2, 2, deityzilla.flip)
 end
 
 
@@ -1221,8 +1232,6 @@ end
    print(player.x,cam.x + 5,cam.y+40,0)
    print(player.y,cam.x + 5,cam.y+50,0)
   -- print(enemycount,cam.x + 5,48,0)
-  print(deityzilla.x,cam.x + 5,cam.y+60,0)
-  print(deityzilla.y,cam.x + 5,cam.y+70,0)
   draw_hearts()
   draw_lives()
   camera(0,0)
