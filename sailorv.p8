@@ -424,7 +424,7 @@ end
 
 function solid(obs, x, y, tag)
 
-  if ((obs.tag == 1) or (obs.tag == 2)) or (obs.tag == 6) or (obs.tag == 7) then
+  if ((obs.tag == 1) or (obs.tag == 2)) or (obs.tag == 6) or (obs.tag == 7) or (obs.tag == 8) then
     local tilex1 = ((x - (x % 8)) / 8)
     local tilex2 = ((x - (x % 8) + 8) / 8)
     local tiley1 = ((y - (y % 8)) / 8)
@@ -552,6 +552,7 @@ function move_actor(actor)
   -- 1: player
   -- 2: ninja
   -- 7: deityzilla
+  -- 8: zombies
 
   if(actor.tag == 1) then
     move_player()
@@ -561,6 +562,9 @@ function move_actor(actor)
   end
   if(actor.tag == 7) then
     update_deityzilla()
+  end
+  if(actor.tag == 8) then
+    update_zombie(actor)
   end
 
 
@@ -728,6 +732,10 @@ fireball = {
 
 allninjas = {
   tag = 2
+}
+
+allzombies = {
+  tag = 8
 }
 
 function update_shuriken(obj)
@@ -939,6 +947,68 @@ function spawnbrawl(xlock, y_spawn)
       drawarrow = true
     end
   end
+end
+
+function make_zombie(x,y, hp)
+  local zombie = {
+    tag=8,
+    x=x,                 -- x position
+    y=y,                 -- y position
+    dx=0,
+    dy=0,
+    max_dx=.2,             -- max x speed
+    p_speed=0.02 + (rnd(0.075)),         -- acceleration force
+    drag=0.02,            -- drag force
+    gravity=0.15,         -- gravity
+    flip = false,  -- false == left facing, true == right facing
+    health = hp,
+    sprite = 107,
+    is_throwing = false,
+    is_walking = true,
+    throw_mod = 250 + flr(rnd(150)),
+    throw_timer = 0,
+    hearts = 5
+  }
+  add(allzombies, zombie)
+  return zombie
+end
+
+function update_zombie(zombie)
+
+ if(t % 25 == 0 and zombie.sprite < 111) then
+    zombie.sprite = zombie.sprite + 1
+  elseif(t % 25 == 0 and zombie.sprite == 111) then
+    --play_sound_effect(sound_effects.footstep)
+    zombie.sprite = 107
+  end
+
+ if(t % 25 == 0) then 
+  if(player.x < zombie.x and zombie.dx > -zombie.max_dx) then
+   if((zombie.x - player.x) < 8) then --player isnt moving, zombie stops at player location
+    zombie.dx = 0
+   else
+     zombie.flip = false
+     zombie.dx-=zombie.p_speed
+  end
+  elseif(player.x > zombie.x and zombie.dx < zombie.max_dx) then
+    if((player.x - zombie.x) < 8) then
+    zombie.dx = 0
+   else
+     zombie.flip = true
+     zombie.dx += zombie.p_speed
+    end
+  end
+end
+
+  zombie.dy+=zombie.gravity
+  -- delete zombie if it falls into the abyss
+  if((zombie.y >= 150 and zombie.y <= 155) or (zombie.y >= 260 and zombie.y <= 265) or zombie.health == nil) then
+    del(allzombies, zombie)
+  end
+end
+
+function draw_zombie(zombie)
+   spr(zombie.sprite, zombie.x, zombie.y-16, 1, 2, zombie.flip)
 end
 
 function make_deityzilla(x, y)
@@ -1155,11 +1225,15 @@ end
 
 function update_game()
   -- spawn more ninjas at randomized x locations
-  if(player.x >= ninjaspawn) then
+  --if(player.x >= ninjaspawn) then
+  if(player.x >= zombiespawn) then
     if (zone == 1) then
-      make_ninja(player.x + 100, 0, 10)
-      ninjaspawn += 50
-      ninjaspawn += flr(rnd(200))
+      --make_ninja(player.x + 100, 0, 10)
+      --ninjaspawn += 50
+      --ninjaspawn += flr(rnd(200))
+      make_zombie(player.x + 100, 0, 10)
+      zombiespawn += 50
+      zombiespawn += flr(rnd(200))
     elseif (zone == 2) then
       -- make_ninja(player.x + 100, 180, 10)
       -- ninjaspawn += 50
@@ -1173,9 +1247,10 @@ function update_game()
   obs_collision(fireball, player)
   foreach(health_pack, update_health_pack)
   foreach(checkpoint, update_checkpoint)
-  move_actor(player)
   foreach(allninjas, move_actor)
+  foreach(allzombies, move_actor)
   move_actor(deityzilla)
+  move_actor(player)
 
   if(player.x >= 300 and player.x <= 350 and zone == 1) then
     spawnbrawl(300, 0)
@@ -1236,8 +1311,9 @@ function draw_game()
   map(0, 0, 0, 0, 128, 32)
   foreach(allninjas, draw_ninja)
   foreach(shuriken, draw_obj)
-  foreach(fireball, draw_obj)
+  foreach(allzombies, draw_zombie)
   draw_deityzilla()
+  foreach(fireball, draw_obj)
   foreach(health_pack, draw_obj)
   foreach(checkpoint, draw_obj)
   if(blocking == true) then
@@ -1511,6 +1587,7 @@ end
 function instantiate_level_obs()
   -- location to spawn first ninja
   ninjaspawn = 0
+  zombiespawn = 0
 
   if (zone == 1) then
     make_ninja(469, 0, 10) -- because dan wanted a ninja here
@@ -1918,21 +1995,21 @@ __gfx__
 00505000020000500050002200200500005200000005200000500200002200000020500000000000000000006666666666666665995000009950000000040900
 02202200220002200220000202200500002200000052200005500200005500000225500000000000000000005555555555555555555000005550000000000080
 0000000000000000000bbb90000000000000000000000000000bbb90000000000000000000000000000000000000000000000000000000000000000000000000
-000bbb900000000000bbb2b900000000000bbb900000000000bbb2b9000000000000000000000000000000000008840000884000000884000088400000884000
-00bbb2b90000000bbbbb88bb0000009b00bbb2b90000000bbbbb88bb0000009b000bbb900000000b0000000000dddd400dddd40000dddd400dddd4000dddd400
-bbbb88bb0000009b5b5bbbbb900009b0bbbb88bb0000009b5b5bbbbb900009b000bbb2b90000009b00000000007d7dd007d7dd00007d7dd007d7dd0007d7dd00
-5b5bbbbb900009b0bbbbbbbbb0009bb05b5bbbbb900009b0bbbbbbbbb0009bb0bbbb88bb000009b00000000000dddd800dddd80000dddd800dddd8000dddd800
-bbbbbbbbb0009bb033333bbbb900bbb0bbbbbbbbb0009bb033333bbbb900bbb05b5bbbbb90009bb000000000004dddd004dddd00004dddd004dddd0004dddd00
-33333bbbb900bbb00005bbbbbaaabb5033333bbbb900bbb00005bbbbbaaabb50bbbbbbbbb900bbb000000000000d440000d44000000d440000d4400000d44000
-000ab3bbbaaabb50000ab3bbbbbbbb00000abbbbbaaabb50000ab3bbbbbbbb0022233bbbbaaabb50000000000848dd08dd4dd0000848dd08dd4dd000dd4dd000
-003a33bbbbbbbb00003a33bbbbbbbb00000ab3bbbbbbbb00003a33bbbbbbbb003330abbbbbbbbb0000000000000d480000d48000000d480000d4800000d48000
-003a3abb55bbb500003a3abb55bbb500003a33bbbbbbbb00003a3a55bbbbb5000000ab3bbbbbbb00000000000888880888888000088888088888800088888000
-0000aabb33bbb0000005aabb33bbb00000303bbb55bbb5000000aa33bbbbb0000003a33b55bbb50000000000000ddd0000888000000ddd000088800000888000
-00003aab335b500000055aab335b500000000aab33bbb00000000a333bbb50000003a3ab33bbb000000000000004d400004840000004d4000048400000484000
-00003aaa3335000000035aaa3335000000000aaa335b500000000a333bb3000000000aaa335b5000000000000008080000808000000808000088000000808000
-0000333a333000000003350a0333000000000aaa333300000000000330330000000000aa33330000000000000004080000408000000408000048000004008000
-000000300030000000000300000300000000003000030000000000003003000000000030000300000000000000080d0000800dd000080d00008d00008800d000
-00003330333000000003330000330000000033300033000000000033303300000000333000330000000000000088dd00088000d00088dd0008dd0000000dd000
+000bbb900000000000bbb2b900000000000bbb900000000000bbb2b9000000000000000000000000000000000008840000088400000884000008840000088400
+00bbb2b90000000bbbbb88bb0000009b00bbb2b90000000bbbbb88bb0000009b000bbb900000000b0000000000dddd4000dddd4000dddd4000dddd4000dddd40
+bbbb88bb0000009b5b5bbbbb900009b0bbbb88bb0000009b5b5bbbbb900009b000bbb2b90000009b00000000007d7dd0007d7dd0007d7dd0007d7dd0007d7dd0
+5b5bbbbb900009b0bbbbbbbbb0009bb05b5bbbbb900009b0bbbbbbbbb0009bb0bbbb88bb000009b00000000000dddd8000dddd8000dddd8000dddd8000dddd80
+bbbbbbbbb0009bb033333bbbb900bbb0bbbbbbbbb0009bb033333bbbb900bbb05b5bbbbb90009bb000000000004dddd0004dddd0004dddd0004dddd0004dddd0
+33333bbbb900bbb00005bbbbbaaabb5033333bbbb900bbb00005bbbbbaaabb50bbbbbbbbb900bbb000000000000d4400000d4400000d4400000d4400000d4400
+000ab3bbbaaabb50000ab3bbbbbbbb00000abbbbbaaabb50000ab3bbbbbbbb0022233bbbbaaabb500000000008d4dd0008d4dd0008d4dd0008d4dd0008d4dd00
+003a33bbbbbbbb00003a33bbbbbbbb00000ab3bbbbbbbb00003a33bbbbbbbb003330abbbbbbbbb0000000000000d4800000d4800000d4800000d4800000d4800
+003a3abb55bbb500003a3abb55bbb500003a33bbbbbbbb00003a3a55bbbbb5000000ab3bbbbbbb00000000000888880008888800088888000888880008888800
+0000aabb33bbb0000005aabb33bbb00000303bbb55bbb5000000aa33bbbbb0000003a33b55bbb500000000000008880000088800000888000008880000088800
+00003aab335b500000055aab335b500000000aab33bbb00000000a333bbb50000003a3ab33bbb000000000000004840000048400000484000004840000048400
+00003aaa3335000000035aaa3335000000000aaa335b500000000a333bb3000000000aaa335b5000000000000008080000080800000808000008800000080800
+0000333a333000000003350a0333000000000aaa333300000000000330330000000000aa33330000000000000004080000040800000408000004800000400800
+000000300030000000000300000300000000003000030000000000003003000000000030000300000000000000080d0000080dd000080d000008d00008800d00
+00003330333000000003330000330000000033300033000000000033303300000000333000330000000000000088dd00008800d00088dd00008dd0000000dd00
 43333353534353433353430000334333000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 43333353534353433353430000334333000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
