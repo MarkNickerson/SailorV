@@ -8,6 +8,7 @@ __lua__
         -- https://www.lexaloffle.com/bbs/?pid=37158#p37402
 
 --------------------------------------------------------------------------------
+
 game_states = {
     splash = 0,
     level1 = 1, --
@@ -422,20 +423,37 @@ function handle_combo()
 end
 
 function solid(obs, x, y, tag)
-  local tilex1 = ((x - (x % 8)) / 8)
-  local tilex2 = ((x - (x % 8) + 8) / 8)
-  local tiley1 = ((y - (y % 8)) / 8)
-  local tiley2 = ((y - (y % 8) - 8) / 8)
 
-  if ((obs.tag == 1) or (obs.tag == 2)) or (obs.tag == 6) then
+  if ((obs.tag == 1) or (obs.tag == 2)) or (obs.tag == 6) then -- 16x8 collision
+    local tilex1 = ((x - (x % 8)) / 8)
+    local tilex2 = ((x - (x % 8) + 8) / 8)
+    local tiley1 = ((y - (y % 8)) / 8)
+    local tiley2 = ((y - (y % 8) - 8) / 8)
     if (fget(mget(tilex1, tiley1), tag)) or (fget(mget(tilex2, tiley1), tag)) or (fget(mget(tilex1, tiley2), tag)) or (fget(mget(tilex2, tiley2), tag))then
       return true
     else
       return false
     end
-  elseif (obs.tag == 3) or (obs.tag == 4)  then
+  elseif (obs.tag == 3) or (obs.tag == 4)  then -- 8x8 collision
     -- 4 is hearts, 6 is checkpoints
+    local tilex1 = ((x - (x % 8)) / 8)
+    local tiley1 = ((y - (y % 8)) / 8)
     if (fget(mget(tilex1, tiley1), tag)) then
+      return true
+    else
+      return false
+    end
+  elseif (obs.tag == 7) then --16x16
+    -- dietyzilla
+    local tilex1 = ((x - (x % 16)) / 8)
+    local tilex2 = tilex1 + 1
+    local tilex3 = tilex1 + 2
+
+    local tiley1 = ((y - (y % 16)) / 8)
+    local tiley2 = tiley1 - 1
+    local tiley3 = tiley1 - 2
+
+    if (fget(mget(tilex1, tiley1), tag)) or (fget(mget(tilex2, tiley1), tag)) or (fget(mget(tilex3, tiley1), tag)) or (fget(mget(tilex1, tiley2), tag)) or (fget(mget(tilex2, tiley2), tag)) or (fget(mget(tilex3, tiley2), tag)) or (fget(mget(tilex1, tiley3), tag)) or (fget(mget(tilex2, tiley3), tag)) or (fget(mget(tilex3, tiley3), tag)) then
       return true
     else
       return false
@@ -548,11 +566,16 @@ function move_actor(actor)
   -- check actor tag
   -- 1: player
   -- 2: ninja
+  -- 7: dietyzilla
+
   if(actor.tag == 1) then
     move_player()
   end
   if (actor.tag == 2) then
     update_ninja(actor)
+  end
+  if(actor.tag == 7) then
+    update_dietyzilla()
   end
 
 
@@ -590,13 +613,12 @@ function move_actor(actor)
       if (actor.dy > 3) then
         actor.dy = actor.dy
       else
-
         actor.isgrounded=true
         actor.dy = 0
       end
 
       -- remove ability to sneak through walls
-      while (not (solid(actor, actor.x-0.2,actor.y, 1) or solid(actor, actor.x+0.2,actor.y, 1))) do
+      while (not (solid(actor, actor.x-0.2, actor.y, 1) or solid(actor, actor.x+0.2, actor.y, 1))) do
         actor.y += 0.05
       end
       while(solid(actor, actor.x+0.2,actor.y-0.1, 1)) do
@@ -896,6 +918,61 @@ function spawnbrawl(xlock, y_spawn)
   end
 end
 
+function make_dietyzilla(x, y)
+  dietyzilla = {
+    tag=7,
+    x=x,                 -- x position
+    y=y,                 -- y position
+    dx=0,
+    dy=0,
+    max_dx=.2,             -- max x speed
+    p_speed=0.02 + (rnd(0.075)),         -- acceleration force
+    drag=0.02,            -- drag force
+    gravity=0.15,         -- gravity
+    flip = false,  -- false == left facing, true == right facing
+    health = 10,
+    sprite = 96,
+    is_throwing = false,
+    is_walking = true,
+    throw_mod = 250 + flr(rnd(150)),
+    throw_timer = 0,
+    hearts = 5
+  }
+  return dietyzilla
+end
+
+function update_dietyzilla()
+
+   if(t % 10 == 0 and dietyzilla.sprite != 104) then
+      dietyzilla.sprite = dietyzilla.sprite + 2
+    elseif(t % 10 == 0 and dietyzilla.sprite == 104) then
+      --play_sound_effect(sound_effects.footstep)
+      dietyzilla.sprite = 96
+    end
+
+  if(player.x < dietyzilla.x and dietyzilla.dx > -dietyzilla.max_dx) then
+   if((dietyzilla.x - player.x) < 16) then --player isnt moving, ninja stops at player location
+    dietyzilla.dx = 0
+   else
+     dietyzilla.flip = false
+      dietyzilla.dx-=dietyzilla.p_speed
+  end
+  elseif(player.x > dietyzilla.x and dietyzilla.dx < dietyzilla.max_dx) then
+    if((player.x - dietyzilla.x) < 16) then
+    dietyzilla.dx = 0
+   else
+     dietyzilla.flip = true
+     dietyzilla.dx += dietyzilla.p_speed
+    end
+  end
+
+  dietyzilla.dy+=dietyzilla.gravity
+end
+
+function draw_dietyzilla()
+   spr(dietyzilla.sprite, dietyzilla.x, dietyzilla.y, 2, 2, dietyzilla.flip)
+end
+
 
 ------------------------------- end enemies
 
@@ -1017,6 +1094,7 @@ end
 
 function init_game()
   player = make_player(20,1)
+  dietyzilla = make_dietyzilla(100, 0)
 
   brawl_spawn = false
   brawl_clear = true
@@ -1045,6 +1123,7 @@ function update_game()
   foreach(checkpoint, update_checkpoint)
   move_actor(player)
   foreach(allninjas, move_actor)
+  move_actor(dietyzilla)
 
   if(player.x >= 300 and player.x <= 350 and zone == 1) then
     spawnbrawl(300, 0)
@@ -1105,6 +1184,7 @@ function draw_game()
   map(0, 0, 0, 0, 128, 32)
   foreach(allninjas, draw_ninja)
   foreach(shuriken, draw_obj)
+  draw_dietyzilla()
   foreach(health_pack, draw_obj)
   foreach(checkpoint, draw_obj)
   if(blocking == true) then
@@ -1141,6 +1221,8 @@ end
    print(player.x,cam.x + 5,cam.y+40,0)
    print(player.y,cam.x + 5,cam.y+50,0)
   -- print(enemycount,cam.x + 5,48,0)
+  print(dietyzilla.x,cam.x + 5,cam.y+60,0)
+  print(dietyzilla.y,cam.x + 5,cam.y+70,0)
   draw_hearts()
   draw_lives()
   camera(0,0)
@@ -1865,7 +1947,7 @@ bbbbbbbbb0009bb033333bbbb900bbb0bbbbbbbbb0009bb033333bbbb900bbb05b5bbbbb90009bb0
 00000077999999999999977700000077000000000000000000000000000077777770000000000000000000788888888887222270000000000000000000000000
 00000007777777777777770000000000000000000000000000000000000000000000000000000000000000777777777777777700000000000000000000000000
 __gff__
-0000000000000000000000000000000000000000000000000000000000000000020202020000020000000080800002000404040404040400000000808000000002020202020202020200000000404004020202020202020202000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000020202020000020000000080800002000404040404040400000000808000000002020202020202020200000000404004020202020202020202000000000000000202020202020202020200000000000002020202020202020202000000000000
 0000000000000000000000000000000000000000020202000000000000000000000000000000000002000000000000000000000200000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000
 __map__
 203f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000cfcfcfcfcfcfcfcfcfcf
