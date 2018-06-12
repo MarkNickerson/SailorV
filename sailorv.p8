@@ -35,7 +35,7 @@ num_lives = 3
 next_state = game_states.splash -- level to load after loading screen
 
 loading_end_time = 0 -- keeps track of when loading screen ends automatically
-loading_time = 0 -- 2/3rds the time is story background, and the other 1/3 is the episode title
+loading_time = 12 -- 2/3rds the time is story background, and the other 1/3 is the episode title
 
 function change_state(desired_state)
   cls()
@@ -1040,13 +1040,13 @@ function make_deityzilla(x, y)
     drag=0.02,            -- drag force
     gravity=0.15,         -- gravity
     flip = false,  -- false == left facing, true == right facing
-    health = 50,
+    health = 100,
     sprite = 96,
     is_throwing = false,
     is_walking = true,
     throw_mod = 250 + flr(rnd(150)),
     throw_timer = 0,
-    jump_timer = 100
+    jump_timer = 50
   }
   add(alldeities, deityzilla)
   return deityzilla
@@ -1079,8 +1079,8 @@ end
 
 function update_deityzilla(deityzilla)
     if deityzilla.jump_timer <= 0 then
-        deityzilla.jump_timer = 100
-        deityzilla.dy -= 5
+        deityzilla.jump_timer = 50
+        deityzilla.dy -= 7
     else deityzilla.jump_timer -= 1
     end
     
