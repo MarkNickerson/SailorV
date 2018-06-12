@@ -466,6 +466,7 @@ function obs_collision(obj1, obj2)
     elseif obj1.tag == 3 then
       if((f.y <= obj2.y) and (f.y >= obj2.y-16)) and ((f.x <= obj2.x+4) and (f.x >= obj2.x-4)) then
 
+        play_sound_effect(sound_effects.explosion)
         del(obj1, f)
         if blocking == false then
           if obj2.hearts > 0 then
@@ -762,14 +763,12 @@ function update_shuriken(obj)
    end
   end
 
-  --obs_collision(shuriken, player) -- O(n^2) smh
  if(t % 6 == 0) then
     if solid(obj, obj.x, obj.y, 1) then
       obj.x = obj.x
       obj.flip = false
     else
       obj.x -= 8 * obj.dx
-
     end
   if(obj.flip == true) then
    obj.flip = false
@@ -852,8 +851,7 @@ function make_ninja(x,y, hp)
     is_throwing = false,
     is_walking = true,
     throw_mod = 250 + flr(rnd(150)),
-    throw_timer = 0,
-    hearts = 5
+    throw_timer = 0
   }
   add(allninjas, ninja)
   return ninja
@@ -875,11 +873,11 @@ end
 function throw_ninja(ninja)
    if(ninja.is_throwing == true) then
     if(ninja.throw_timer == 0) then -- spawn a shuriken once animation finishes
-            play_sound_effect(sound_effects.ninja_throw)
+    play_sound_effect(sound_effects.ninja_throw)
      if(ninja.flip) then -- facing right
-      create_obs(shuriken, 79, ninja.x+4, ninja.y-10, -1, 3, 1, 1) -- last 2 arguments are width and height of 1
+      create_obs(shuriken, 79, ninja.x+4, ninja.y-10, -1, 3, 1, 1) 
      else -- facing left
-      create_obs(shuriken, 79, ninja.x-4, ninja.y-10, 1, 3, 1, 1) -- last 2 arguments are width and height of 1
+      create_obs(shuriken, 79, ninja.x-4, ninja.y-10, 1, 3, 1, 1) 
      end
      ninja.is_throwing = false
         ninja.is_walking = true
@@ -899,10 +897,8 @@ function throw_ninja(ninja)
 end
 
 function update_ninja(ninja)
-  -- ninja spawns and runs to the left
-
   if(player.x < ninja.x and ninja.dx > -ninja.max_dx) then
-   if((ninja.x - player.x) < 8) then --player isnt moving, ninja stops at player location
+   if((ninja.x - player.x) < 8) then
     ninja.dx = 0
    else
      ninja.flip = false
@@ -989,18 +985,14 @@ function make_zombie(x,y, hp)
     flip = false,  -- false == left facing, true == right facing
     health = hp,
     sprite = 107,
-    is_throwing = false,
     is_walking = true,
-    throw_mod = 250 + flr(rnd(150)),
-    throw_timer = 0,
-    hearts = 5
+    throw_timer = 0
   }
   add(allzombies, zombie)
   return zombie
 end
 
 function update_zombie(zombie)
-
  if(t % 25 == 0 and zombie.sprite < 111) then
     zombie.sprite = zombie.sprite + 1
   elseif(t % 25 == 0 and zombie.sprite == 111) then
@@ -1027,7 +1019,6 @@ function update_zombie(zombie)
 end
 
   zombie.dy+=zombie.gravity
-  -- delete zombie if it falls into the abyss
   if((zombie.y >= 150 and zombie.y <= 155) or (zombie.y >= 260 and zombie.y <= 265) or zombie.health == nil) then
     del(allzombies, zombie)
   end
@@ -1049,13 +1040,12 @@ function make_deityzilla(x, y)
     drag=0.02,            -- drag force
     gravity=0.15,         -- gravity
     flip = false,  -- false == left facing, true == right facing
-    health = 10,
+    health = 50,
     sprite = 96,
     is_throwing = false,
     is_walking = true,
     throw_mod = 250 + flr(rnd(150)),
-    throw_timer = 0,
-    hearts = 5
+    throw_timer = 0
   }
   add(alldeities, deityzilla)
   return deityzilla
@@ -1063,16 +1053,16 @@ end
 
 function throw_deityzilla(deityzilla)
    if(deityzilla.is_throwing == true) then
-    if(deityzilla.throw_timer == 0) then -- spawn a shuriken once animation finishes
+    if(deityzilla.throw_timer == 0) then
       deityzilla.sprite = 104
-            --play_sound_effect(sound_effects.ninja_throw)
+      play_sound_effect(sound_effects.fireball)
      if(deityzilla.flip) then -- facing right
-      create_obs(fireball, 95, deityzilla.x+4, deityzilla.y-14, -1, 3, 1, 1) -- last 2 arguments are width and height of 1
-     else -- facing left
-      create_obs(fireball, 95, deityzilla.x-4, deityzilla.y-14, 1, 3, 1, 1) -- last 2 arguments are width and height of 1
+      create_obs(fireball, 95, deityzilla.x+4, deityzilla.y-14, -1, 3, 1, 1)
+     else
+      create_obs(fireball, 95, deityzilla.x-4, deityzilla.y-14, 1, 3, 1, 1)
      end
      deityzilla.is_throwing = false
-        deityzilla.is_walking = true
+    deityzilla.is_walking = true
      deityzilla.throw_mod = 250 + flr(rnd(200))
      deityzilla.sprite = 96
     elseif(deityzilla.throw_timer > 0) then
@@ -1091,26 +1081,26 @@ function update_deityzilla(deityzilla)
    if(t % 10 == 0 and deityzilla.sprite < 102) then
       deityzilla.sprite = deityzilla.sprite + 2
     elseif(t % 10 == 0 and deityzilla.sprite == 102) then
-      --play_sound_effect(sound_effects.footstep)
+      play_sound_effect(sound_effects.big_footstep)
       deityzilla.sprite = 96
     end
 
-  -- deityzilla follows player around (for collision debugging purposes)
-  --if(player.x < deityzilla.x and deityzilla.dx > -deityzilla.max_dx) then
-  -- if((deityzilla.x - player.x) < 8) then --player isnt moving, ninja stops at player location
-  --  deityzilla.dx = 0
-  -- else
-  --   deityzilla.flip = false
-  --    deityzilla.dx-=deityzilla.p_speed
-  --end
-  --elseif(player.x > deityzilla.x and deityzilla.dx < deityzilla.max_dx) then
-  --  if((player.x - deityzilla.x) < 16) then
-  --  deityzilla.dx = 0
-  -- else
-  --   deityzilla.flip = true
-  --   deityzilla.dx += deityzilla.p_speed
-  --  end
-  --end
+  if(player.x < deityzilla.x and deityzilla.dx > -deityzilla.max_dx) then
+   if((deityzilla.x - player.x) < 8) then --player isnt moving, ninja stops at player location
+    deityzilla.dx = 0
+   else
+     deityzilla.flip = false
+      deityzilla.dx-=deityzilla.p_speed
+  end
+  elseif(player.x > deityzilla.x and deityzilla.dx < deityzilla.max_dx) then
+    if((player.x - deityzilla.x) < 16) then
+    deityzilla.dx = 0
+   else
+     deityzilla.flip = true
+     deityzilla.dx += deityzilla.p_speed
+    end
+  end
+
 
   deityzilla.dy+=deityzilla.gravity
 
@@ -1120,11 +1110,8 @@ function update_deityzilla(deityzilla)
 end
 
 function update_enemies()
-  -- spawn more enemies at randomized x locations
-  --if(player.x >= ninjaspawn) then
-  --if(player.x >= zombiespawn) then
-  if(zone==2 and player.x > 875 and spawn != 10000) then
-    dz = make_deityzilla(900, 230)
+  if(zone==2 and player.x > 875 and spawn != 10000) then 
+    dz = make_deityzilla(900, 230) 
     spawn = 10000
   elseif(player.x >= spawn) then
     if (zone == 1) then
