@@ -1599,6 +1599,7 @@ function instantiate_level_obs()
     create_obs(health_pack, 39, 700, 4, 1, 4, 1, 1)
 
   elseif (zone == 2) then
+    change_music(music_states.dungeon)
     create_obs(health_pack, 39, 39*8, 30*8, 1, 4, 1, 1)
     create_obs(health_pack, 39, 55*8, 17*8, 1, 4, 1, 1)
     create_obs(health_pack, 39, 66*8, 18*8, 1, 4, 1, 1)
