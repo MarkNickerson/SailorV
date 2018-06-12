@@ -148,6 +148,8 @@ function kick()
   end
 
   obs_collision(allninjas, player)
+  obs_collision(allzombies, player)
+  obs_collision(alldeities, player)
 end
 
 function punch()
@@ -179,6 +181,8 @@ function punch()
   end
 
   obs_collision(allninjas, player)
+  obs_collision(allzombies, player)
+  obs_collision(alldeities, player)
 end
 
 
@@ -476,7 +480,7 @@ function obs_collision(obj1, obj2)
         end
       end
 
-    elseif obj1.tag == 2 then
+    elseif obj1.tag == 2 or obj1.tag == 8 or obj1.tag == 7 then
       if((f.y <= obj2.y+8) and (f.y >= obj2.y-8)) and ((f.x <= obj2.x+8) and (f.x >= obj2.x-8)) then
         if actor.flp == true then
           if(f.x-6.5 <= 0 or solid(f, f.x - 6.5, f.y-0.5, 1)) then
@@ -504,7 +508,6 @@ function obs_collision(obj1, obj2)
             del(obj1, f)
           end
       end
-
 
     elseif obj1.tag == 6 then
         -- obj1 is checkpoint
@@ -561,7 +564,7 @@ function move_actor(actor)
     update_ninja(actor)
   end
   if(actor.tag == 7) then
-    update_deityzilla()
+    update_deityzilla(actor)
   end
   if(actor.tag == 8) then
     update_zombie(actor)
@@ -736,6 +739,10 @@ allninjas = {
 
 allzombies = {
   tag = 8
+}
+
+alldeities = {
+  tag = 7
 }
 
 function update_shuriken(obj)
@@ -1031,10 +1038,11 @@ function make_deityzilla(x, y)
     throw_timer = 0,
     hearts = 5
   }
+  add(alldeities, deityzilla)
   return deityzilla
 end
 
-function throw_deityzilla()
+function throw_deityzilla(deityzilla)
    if(deityzilla.is_throwing == true) then
     if(deityzilla.throw_timer == 0) then -- spawn a shuriken once animation finishes
       deityzilla.sprite = 104
@@ -1059,8 +1067,8 @@ function throw_deityzilla()
     end
 end
 
-function update_deityzilla()
-  throw_deityzilla()
+function update_deityzilla(deityzilla)
+  throw_deityzilla(deityzilla)
    if(t % 10 == 0 and deityzilla.sprite < 102) then
       deityzilla.sprite = deityzilla.sprite + 2
     elseif(t % 10 == 0 and deityzilla.sprite == 102) then
@@ -1086,9 +1094,14 @@ function update_deityzilla()
   --end
 
   deityzilla.dy+=deityzilla.gravity
+
+  if((deityzilla.y >= 150 and deityzilla.y <= 155) or (deityzilla.y >= 260 and deityzilla.y <= 265) or deityzilla.health == nil) then
+    del(alldeities, deityzilla)
+  end
+
 end
 
-function draw_deityzilla()
+function draw_deityzilla(deityzilla)
    spr(deityzilla.sprite, deityzilla.x, deityzilla.y-16, 2, 2, deityzilla.flip)
 end
 
@@ -1213,7 +1226,7 @@ end
 
 function init_game()
   player = make_player(20,1)
-  deityzilla = make_deityzilla(100, 0)
+  make_deityzilla(100, 0)
 
   brawl_spawn = false
   brawl_clear = true
@@ -1249,7 +1262,7 @@ function update_game()
   foreach(checkpoint, update_checkpoint)
   foreach(allninjas, move_actor)
   foreach(allzombies, move_actor)
-  move_actor(deityzilla)
+  foreach(alldeities, move_actor)
   move_actor(player)
 
   if(player.x >= 300 and player.x <= 350 and zone == 1) then
@@ -1312,7 +1325,8 @@ function draw_game()
   foreach(allninjas, draw_ninja)
   foreach(shuriken, draw_obj)
   foreach(allzombies, draw_zombie)
-  draw_deityzilla()
+  --draw_deityzilla()
+  foreach(alldeities, draw_deityzilla)
   foreach(fireball, draw_obj)
   foreach(health_pack, draw_obj)
   foreach(checkpoint, draw_obj)
@@ -1350,6 +1364,7 @@ end
    print(player.x,cam.x + 5,cam.y+40,0)
    print(player.y,cam.x + 5,cam.y+50,0)
   -- print(enemycount,cam.x + 5,48,0)
+   print(deityzilla.health,cam.x + 5,cam.y+60,0)
   draw_hearts()
   draw_lives()
   camera(0,0)
