@@ -8,6 +8,7 @@ __lua__
         -- https://www.lexaloffle.com/bbs/?pid=37158#p37402
 
 --------------------------------------------------------------------------------
+
 game_states = {
     splash = 0,
     level1 = 1, --
@@ -422,19 +423,21 @@ function handle_combo()
 end
 
 function solid(obs, x, y, tag)
-  local tilex1 = ((x - (x % 8)) / 8)
-  local tilex2 = ((x - (x % 8) + 8) / 8)
-  local tiley1 = ((y - (y % 8)) / 8)
-  local tiley2 = ((y - (y % 8) - 8) / 8)
 
-  if ((obs.tag == 1) or (obs.tag == 2)) or (obs.tag == 6) then
+  if ((obs.tag == 1) or (obs.tag == 2)) or (obs.tag == 6) or (obs.tag == 7) or (obs.tag == 8) then
+    local tilex1 = ((x - (x % 8)) / 8)
+    local tilex2 = ((x - (x % 8) + 8) / 8)
+    local tiley1 = ((y - (y % 8)) / 8)
+    local tiley2 = ((y - (y % 8) - 8) / 8)
     if (fget(mget(tilex1, tiley1), tag)) or (fget(mget(tilex2, tiley1), tag)) or (fget(mget(tilex1, tiley2), tag)) or (fget(mget(tilex2, tiley2), tag))then
       return true
     else
       return false
     end
-  elseif (obs.tag == 3) or (obs.tag == 4)  then
+  elseif (obs.tag == 3) or (obs.tag == 4)  then -- 8x8 collision
     -- 4 is hearts, 6 is checkpoints
+    local tilex1 = ((x - (x % 8)) / 8)
+    local tiley1 = ((y - (y % 8)) / 8)
     if (fget(mget(tilex1, tiley1), tag)) then
       return true
     else
@@ -548,11 +551,20 @@ function move_actor(actor)
   -- check actor tag
   -- 1: player
   -- 2: ninja
+  -- 7: deityzilla
+  -- 8: zombies
+
   if(actor.tag == 1) then
     move_player()
   end
   if (actor.tag == 2) then
     update_ninja(actor)
+  end
+  if(actor.tag == 7) then
+    update_deityzilla()
+  end
+  if(actor.tag == 8) then
+    update_zombie(actor)
   end
 
 
@@ -590,13 +602,12 @@ function move_actor(actor)
       if (actor.dy > 3) then
         actor.dy = actor.dy
       else
-
         actor.isgrounded=true
         actor.dy = 0
       end
 
       -- remove ability to sneak through walls
-      while (not (solid(actor, actor.x-0.2,actor.y, 1) or solid(actor, actor.x+0.2,actor.y, 1))) do
+      while (not (solid(actor, actor.x-0.2, actor.y, 1) or solid(actor, actor.x+0.2, actor.y, 1))) do
         actor.y += 0.05
       end
       while(solid(actor, actor.x+0.2,actor.y-0.1, 1)) do
@@ -715,8 +726,16 @@ shuriken = {
   tag = 3
 }
 
+fireball = {
+  tag = 3
+}
+
 allninjas = {
   tag = 2
+}
+
+allzombies = {
+  tag = 8
 }
 
 function update_shuriken(obj)
@@ -735,13 +754,46 @@ function update_shuriken(obj)
    end
   end
 
-  obs_collision(shuriken, player)
+  --obs_collision(shuriken, player) -- O(n^2) smh
  if(t % 6 == 0) then
     if solid(obj, obj.x, obj.y, 1) then
       obj.x = obj.x
       obj.flip = false
     else
       obj.x -= 8 * obj.dx
+
+    end
+  if(obj.flip == true) then
+   obj.flip = false
+  else
+   obj.flip = true
+  end
+ end
+end
+
+function update_fireball(obj)
+  if t - obj.birthdate >= 500 then
+    del(fireball, obj)
+  end
+
+  -- deletes fireball when it goes off screen
+  if(obj.dx < 0) then
+   if (obj.x > (player.x + 128)) then
+    del(fireball, obj)
+   end
+  elseif (obj.dx > 0) then
+   if (obj.x < (player.x - 128)) then
+    del(fireball, obj)
+   end
+  end
+
+ if(t % 6 == 0) then
+    if solid(obj, obj.x, obj.y, 1) then
+      obj.x = obj.x
+      obj.flip = false
+    else
+      obj.x -= 8 * obj.dx
+      obj.y -= 8 * obj.dy
 
     end
   if(obj.flip == true) then
@@ -762,6 +814,7 @@ function create_obs(obj, sprite, x, y, dx, tag, width, height)
   o.x = x
   o.y = y
   o.dx = dx
+  o.dy = dx*dx*(rnd(0.5))-0.25
   o.sprite = sprite
   o.flip = false
   o.tag = tag
@@ -896,6 +949,149 @@ function spawnbrawl(xlock, y_spawn)
   end
 end
 
+function make_zombie(x,y, hp)
+  local zombie = {
+    tag=8,
+    x=x,                 -- x position
+    y=y,                 -- y position
+    dx=0,
+    dy=0,
+    max_dx=.2,             -- max x speed
+    p_speed=0.02 + (rnd(0.075)),         -- acceleration force
+    drag=0.02,            -- drag force
+    gravity=0.15,         -- gravity
+    flip = false,  -- false == left facing, true == right facing
+    health = hp,
+    sprite = 107,
+    is_throwing = false,
+    is_walking = true,
+    throw_mod = 250 + flr(rnd(150)),
+    throw_timer = 0,
+    hearts = 5
+  }
+  add(allzombies, zombie)
+  return zombie
+end
+
+function update_zombie(zombie)
+
+ if(t % 25 == 0 and zombie.sprite < 111) then
+    zombie.sprite = zombie.sprite + 1
+  elseif(t % 25 == 0 and zombie.sprite == 111) then
+    --play_sound_effect(sound_effects.footstep)
+    zombie.sprite = 107
+  end
+
+ if(t % 25 == 0) then 
+  if(player.x < zombie.x and zombie.dx > -zombie.max_dx) then
+   if((zombie.x - player.x) < 8) then --player isnt moving, zombie stops at player location
+    zombie.dx = 0
+   else
+     zombie.flip = false
+     zombie.dx-=zombie.p_speed
+  end
+  elseif(player.x > zombie.x and zombie.dx < zombie.max_dx) then
+    if((player.x - zombie.x) < 8) then
+    zombie.dx = 0
+   else
+     zombie.flip = true
+     zombie.dx += zombie.p_speed
+    end
+  end
+end
+
+  zombie.dy+=zombie.gravity
+  -- delete zombie if it falls into the abyss
+  if((zombie.y >= 150 and zombie.y <= 155) or (zombie.y >= 260 and zombie.y <= 265) or zombie.health == nil) then
+    del(allzombies, zombie)
+  end
+end
+
+function draw_zombie(zombie)
+   spr(zombie.sprite, zombie.x, zombie.y-16, 1, 2, zombie.flip)
+end
+
+function make_deityzilla(x, y)
+  deityzilla = {
+    tag=7,
+    x=x,                 -- x position
+    y=y,                 -- y position
+    dx=0,
+    dy=0,
+    max_dx=.2,             -- max x speed
+    p_speed=0.02 + (rnd(0.075)),         -- acceleration force
+    drag=0.02,            -- drag force
+    gravity=0.15,         -- gravity
+    flip = false,  -- false == left facing, true == right facing
+    health = 10,
+    sprite = 96,
+    is_throwing = false,
+    is_walking = true,
+    throw_mod = 250 + flr(rnd(150)),
+    throw_timer = 0,
+    hearts = 5
+  }
+  return deityzilla
+end
+
+function throw_deityzilla()
+   if(deityzilla.is_throwing == true) then
+    if(deityzilla.throw_timer == 0) then -- spawn a shuriken once animation finishes
+      deityzilla.sprite = 104
+            --play_sound_effect(sound_effects.ninja_throw)
+     if(deityzilla.flip) then -- facing right
+      create_obs(fireball, 95, deityzilla.x+4, deityzilla.y-14, -1, 3, 1, 1) -- last 2 arguments are width and height of 1
+     else -- facing left
+      create_obs(fireball, 95, deityzilla.x-4, deityzilla.y-14, 1, 3, 1, 1) -- last 2 arguments are width and height of 1
+     end
+     deityzilla.is_throwing = false
+        deityzilla.is_walking = true
+     deityzilla.throw_mod = 250 + flr(rnd(200))
+     deityzilla.sprite = 96
+    elseif(deityzilla.throw_timer > 0) then
+      deityzilla.sprite = 104
+    end
+    deityzilla.throw_timer -= 2
+    elseif(t % deityzilla.throw_mod == 0) then -- cannot throw while previous throw is being completed
+      deityzilla.is_throwing=true
+      deityzilla.is_walking = false
+      deityzilla.throw_timer = 20
+    end
+end
+
+function update_deityzilla()
+  throw_deityzilla()
+   if(t % 10 == 0 and deityzilla.sprite < 102) then
+      deityzilla.sprite = deityzilla.sprite + 2
+    elseif(t % 10 == 0 and deityzilla.sprite == 102) then
+      --play_sound_effect(sound_effects.footstep)
+      deityzilla.sprite = 96
+    end
+
+  -- deityzilla follows player around (for collision debugging purposes)
+  --if(player.x < deityzilla.x and deityzilla.dx > -deityzilla.max_dx) then
+  -- if((deityzilla.x - player.x) < 8) then --player isnt moving, ninja stops at player location
+  --  deityzilla.dx = 0
+  -- else
+  --   deityzilla.flip = false
+  --    deityzilla.dx-=deityzilla.p_speed
+  --end
+  --elseif(player.x > deityzilla.x and deityzilla.dx < deityzilla.max_dx) then
+  --  if((player.x - deityzilla.x) < 16) then
+  --  deityzilla.dx = 0
+  -- else
+  --   deityzilla.flip = true
+  --   deityzilla.dx += deityzilla.p_speed
+  --  end
+  --end
+
+  deityzilla.dy+=deityzilla.gravity
+end
+
+function draw_deityzilla()
+   spr(deityzilla.sprite, deityzilla.x, deityzilla.y-16, 2, 2, deityzilla.flip)
+end
+
 
 ------------------------------- end enemies
 
@@ -1017,6 +1213,7 @@ end
 
 function init_game()
   player = make_player(20,1)
+  deityzilla = make_deityzilla(100, 0)
 
   brawl_spawn = false
   brawl_clear = true
@@ -1028,11 +1225,15 @@ end
 
 function update_game()
   -- spawn more ninjas at randomized x locations
-  if(player.x >= ninjaspawn) then
+  --if(player.x >= ninjaspawn) then
+  if(player.x >= zombiespawn) then
     if (zone == 1) then
-      make_ninja(player.x + 100, 0, 10)
-      ninjaspawn += 50
-      ninjaspawn += flr(rnd(200))
+      --make_ninja(player.x + 100, 0, 10)
+      --ninjaspawn += 50
+      --ninjaspawn += flr(rnd(200))
+      make_zombie(player.x + 100, 0, 10)
+      zombiespawn += 50
+      zombiespawn += flr(rnd(200))
     elseif (zone == 2) then
       -- make_ninja(player.x + 100, 180, 10)
       -- ninjaspawn += 50
@@ -1041,10 +1242,15 @@ function update_game()
 
   end
   foreach(shuriken, update_shuriken)
+  obs_collision(shuriken, player)
+  foreach(fireball, update_fireball)
+  obs_collision(fireball, player)
   foreach(health_pack, update_health_pack)
   foreach(checkpoint, update_checkpoint)
-  move_actor(player)
   foreach(allninjas, move_actor)
+  foreach(allzombies, move_actor)
+  move_actor(deityzilla)
+  move_actor(player)
 
   if(player.x >= 300 and player.x <= 350 and zone == 1) then
     spawnbrawl(300, 0)
@@ -1105,6 +1311,9 @@ function draw_game()
   map(0, 0, 0, 0, 128, 32)
   foreach(allninjas, draw_ninja)
   foreach(shuriken, draw_obj)
+  foreach(allzombies, draw_zombie)
+  draw_deityzilla()
+  foreach(fireball, draw_obj)
   foreach(health_pack, draw_obj)
   foreach(checkpoint, draw_obj)
   if(blocking == true) then
@@ -1378,6 +1587,7 @@ end
 function instantiate_level_obs()
   -- location to spawn first ninja
   ninjaspawn = 0
+  zombiespawn = 0
 
   if (zone == 1) then
     make_ninja(469, 0, 10) -- because dan wanted a ninja here
@@ -1389,6 +1599,7 @@ function instantiate_level_obs()
     create_obs(health_pack, 39, 700, 4, 1, 4, 1, 1)
 
   elseif (zone == 2) then
+    change_music(music_states.dungeon)
     create_obs(health_pack, 39, 39*8, 30*8, 1, 4, 1, 1)
     create_obs(health_pack, 39, 55*8, 17*8, 1, 4, 1, 1)
     create_obs(health_pack, 39, 66*8, 18*8, 1, 4, 1, 1)
@@ -1785,21 +1996,21 @@ __gfx__
 00505000020000500050002200200500005200000005200000500200002200000020500000000000000000006666666666666665995000009950000000040900
 02202200220002200220000202200500002200000052200005500200005500000225500000000000000000005555555555555555555000005550000000000080
 0000000000000000000bbb90000000000000000000000000000bbb90000000000000000000000000000000000000000000000000000000000000000000000000
-000bbb900000000000bbb2b900000000000bbb900000000000bbb2b9000000000000000000000000000000000008840000884000000884000088400000884000
-00bbb2b90000000bbbbb88bb0000009b00bbb2b90000000bbbbb88bb0000009b000bbb900000000b0000000000dddd400dddd40000dddd400dddd4000dddd400
-bbbb88bb0000009b5b5bbbbb900009b0bbbb88bb0000009b5b5bbbbb900009b000bbb2b90000009b00000000007d7dd007d7dd00007d7dd007d7dd0007d7dd00
-5b5bbbbb900009b0bbbbbbbbb0009bb05b5bbbbb900009b0bbbbbbbbb0009bb0bbbb88bb000009b00000000000dddd800dddd80000dddd800dddd8000dddd800
-bbbbbbbbb0009bb033333bbbb900bbb0bbbbbbbbb0009bb033333bbbb900bbb05b5bbbbb90009bb000000000004dddd004dddd00004dddd004dddd0004dddd00
-33333bbbb900bbb00005bbbbbaaabb5033333bbbb900bbb00005bbbbbaaabb50bbbbbbbbb900bbb000000000000d440000d44000000d440000d4400000d44000
-000ab3bbbaaabb50000ab3bbbbbbbb00000abbbbbaaabb50000ab3bbbbbbbb0022233bbbbaaabb50000000000848dd08dd4dd0000848dd08dd4dd000dd4dd000
-003a33bbbbbbbb00003a33bbbbbbbb00000ab3bbbbbbbb00003a33bbbbbbbb003330abbbbbbbbb0000000000000d480000d48000000d480000d4800000d48000
-003a3abb55bbb500003a3abb55bbb500003a33bbbbbbbb00003a3a55bbbbb5000000ab3bbbbbbb00000000000888880888888000088888088888800088888000
-0000aabb33bbb0000005aabb33bbb00000303bbb55bbb5000000aa33bbbbb0000003a33b55bbb50000000000000ddd0000888000000ddd000088800000888000
-00003aab335b500000055aab335b500000000aab33bbb00000000a333bbb50000003a3ab33bbb000000000000004d400004840000004d4000048400000484000
-00003aaa3335000000035aaa3335000000000aaa335b500000000a333bb3000000000aaa335b5000000000000008080000808000000808000088000000808000
-0000333a333000000003350a0333000000000aaa333300000000000330330000000000aa33330000000000000004080000408000000408000048000004008000
-000000300030000000000300000300000000003000030000000000003003000000000030000300000000000000080d0000800dd000080d00008d00008800d000
-00003330333000000003330000330000000033300033000000000033303300000000333000330000000000000088dd00088000d00088dd0008dd0000000dd000
+000bbb900000000000bbb2b900000000000bbb900000000000bbb2b9000000000000000000000000000000000008840000088400000884000008840000088400
+00bbb2b90000000bbbbb88bb0000009b00bbb2b90000000bbbbb88bb0000009b000bbb900000000b0000000000dddd4000dddd4000dddd4000dddd4000dddd40
+bbbb88bb0000009b5b5bbbbb900009b0bbbb88bb0000009b5b5bbbbb900009b000bbb2b90000009b00000000007d7dd0007d7dd0007d7dd0007d7dd0007d7dd0
+5b5bbbbb900009b0bbbbbbbbb0009bb05b5bbbbb900009b0bbbbbbbbb0009bb0bbbb88bb000009b00000000000dddd8000dddd8000dddd8000dddd8000dddd80
+bbbbbbbbb0009bb033333bbbb900bbb0bbbbbbbbb0009bb033333bbbb900bbb05b5bbbbb90009bb000000000004dddd0004dddd0004dddd0004dddd0004dddd0
+33333bbbb900bbb00005bbbbbaaabb5033333bbbb900bbb00005bbbbbaaabb50bbbbbbbbb900bbb000000000000d4400000d4400000d4400000d4400000d4400
+000ab3bbbaaabb50000ab3bbbbbbbb00000abbbbbaaabb50000ab3bbbbbbbb0022233bbbbaaabb500000000008d4dd0008d4dd0008d4dd0008d4dd0008d4dd00
+003a33bbbbbbbb00003a33bbbbbbbb00000ab3bbbbbbbb00003a33bbbbbbbb003330abbbbbbbbb0000000000000d4800000d4800000d4800000d4800000d4800
+003a3abb55bbb500003a3abb55bbb500003a33bbbbbbbb00003a3a55bbbbb5000000ab3bbbbbbb00000000000888880008888800088888000888880008888800
+0000aabb33bbb0000005aabb33bbb00000303bbb55bbb5000000aa33bbbbb0000003a33b55bbb500000000000008880000088800000888000008880000088800
+00003aab335b500000055aab335b500000000aab33bbb00000000a333bbb50000003a3ab33bbb000000000000004840000048400000484000004840000048400
+00003aaa3335000000035aaa3335000000000aaa335b500000000a333bb3000000000aaa335b5000000000000008080000080800000808000008800000080800
+0000333a333000000003350a0333000000000aaa333300000000000330330000000000aa33330000000000000004080000040800000408000004800000400800
+000000300030000000000300000300000000003000030000000000003003000000000030000300000000000000080d0000080dd000080d000008d00008800d00
+00003330333000000003330000330000000033300033000000000033303300000000333000330000000000000088dd00008800d00088dd00008dd0000000dd00
 43333353534353433353430000334333000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 43333353534353433353430000334333000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -1865,7 +2076,7 @@ bbbbbbbbb0009bb033333bbbb900bbb0bbbbbbbbb0009bb033333bbbb900bbb05b5bbbbb90009bb0
 00000077999999999999977700000077000000000000000000000000000077777770000000000000000000788888888887222270000000000000000000000000
 00000007777777777777770000000000000000000000000000000000000000000000000000000000000000777777777777777700000000000000000000000000
 __gff__
-0000000000000000000000000000000000000000000000000000000000000000020202020000020000000080800002000404040404040400000000808000000002020202020202020200000000404004020202020202020202000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000020202020000020000000080800002000404040404040400000000808000000002020202020202020200000000404004020202020202020202000000000000000202020202020202020200000000000002020202020202020202000000000000
 0000000000000000000000000000000000000000020202000000000000000000000000000000000002000000000000000000000200000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000
 __map__
 203f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000cfcfcfcfcfcfcfcfcfcf
@@ -1915,11 +2126,11 @@ __sfx__
 0116000018050106051805010605180500e0001805017050170500b000170501060511050000000e050000000b050000001805010605180500000018050170501705000000170501060513050106351705010635
 0116000028120261202b120281202812028120281202812528120261202b12028120281202812028120281252812026120281202b1202b1202d1202b1202f120000002f120240002f1202d1202d1202b12028120
 011600000c1400c1400c140181400c140181400c14000000171401714017140181401714018140171401060515140151401514017140171401714018140106051714017140171401814018140181401c14018100
-010f0000105400000010540000001d6230000000000185000e540005000e540000001d623000000000000500105400050010540000001d623000000000000000115400050011540005001d6231d6031054029603
-010f0000211550010500105001051f1550010500105001051c1550010500105001051815500105001050010518155001051a15500105001050010518155001001c1551c1551a15500100181551a1550010018155
-010f0000100451004510045100450e0450e0450e0450e0451004510045100451004513045130451304513045100451004510045100450e0450e0450e0450e0451004510045100451004515045150451504515045
-010f00001515517155181551a1550000000000000000000017155181551a1551c15500000000000000000000181551a1551c1551d15500000000000000000000181551a1551c1551a15518155171551515500000
-010f00001515515155171551715518155171551515518100171551715518155181551a15518155171551a10018155181551a1551a1551c1551a155181551a1001c1551a155181551715518155171551515500000
+010e0000105400000010540000001d6230000000000185000e540005000e540000001d623000000000000500105400050010540000001d623000000000000000115400050011540005001d6231d6031054029603
+010e0000211550010500105001051f1550010500105001051c1550010500105001051815500105001050010518155001051a15500105001050010518155001001c1551c1551a15500100181551a1550010018155
+010e0000100451004510045100450e0450e0450e0450e0451004510045100451004513045130451304513045100451004510045100450e0450e0450e0450e0451004510045100451004515045150451504515045
+010e00001515517155181551a1550000000000000000000017155181551a1551c15500000000000000000000181551a1551c1551d15500000000000000000000181551a1551c1551a15518155171551515500000
+010e00001515515155171551715518155171551515518100171551715518155181551a15518155171551a10018155181551a1551a1551c1551a155181551a1001c1551a155181551715518155171551515500000
 010a0000215201f50000000000001f5200000021520000002152000000000001f5001f5201f500215201f500215201f5001f5201f5002152000000235200000000000000001f520000001d520000001c52000000
 010a002025530005001c50027500235303c500255301c500255301c5001c500005002353010500255301c500255301c5002353010500255302150026530215002150021500235300050023530000002353000000
 010a00001d6231c6031d7331d7431d7531c6031c710000001d6231c6031d7431d7431d7531c6031c710000001d6231c6031d7531d7531d7531c6031c710000001d6231c6031d7531d7531d753000001c70000000
@@ -1929,7 +2140,7 @@ __sfx__
 010a00202153500505005050050521535005050050500505215350050500505005052153500505005050050521535005052153524505215352450521535245052153521535215352153521535215052150521505
 010a0000215202152021500215001f5201f5202152021520215002150021500215001f5201f520215202152021500215001f5201f5202152021520235202352023500235001f5201f5201d5201d5201c5201c520
 010a00002552000000255200000027520000000000000000255200000025520000002a520000000000000000255200000025520000002a520000002c520000002752000000255200000022520000000000000000
-010f00001c1551a1551f1551c155180001800018000180001c1551a1551f1551c1551c1051c1051c1051c1051c1551a1551c1551f1551f105211551f155231551800523155180052315521155211051f1551c155
+010e00001c1551a1551f1551c155180001800018000180001c1551a1551f1551c1551c1051c1051c1051c1051c1551a1551c1551f1551f105211551f155231551800523155180052315521155211051f1551c155
 0112000009420104200c4201040009420104200c42010400024200942005420004000040000400004000040004420114200542011420054200742013420094200942000400044250442504425044250442504425
 0112000024140241400010024140231402314000100231402314023140211402114018100211401f1401d1401f1401f1401d1401d1401c1401a1401a14018140181401810018100181000c10015140181401c140
 01120020094200c420094200c400094200c420094200c400044200b420074200b400044200b420074200b400044200b420074200b400044200b420074200b40009420104200c4201040009420104200c42010420
