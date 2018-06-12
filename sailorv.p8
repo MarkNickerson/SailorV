@@ -1045,7 +1045,8 @@ function make_deityzilla(x, y)
     is_throwing = false,
     is_walking = true,
     throw_mod = 250 + flr(rnd(150)),
-    throw_timer = 0
+    throw_timer = 0,
+    jump_timer = 100
   }
   add(alldeities, deityzilla)
   return deityzilla
@@ -1077,6 +1078,12 @@ function throw_deityzilla(deityzilla)
 end
 
 function update_deityzilla(deityzilla)
+    if deityzilla.jump_timer <= 0 then
+        deityzilla.jump_timer = 100
+        deityzilla.dy -= 5
+    else deityzilla.jump_timer -= 1
+    end
+    
   throw_deityzilla(deityzilla)
    if(t % 10 == 0 and deityzilla.sprite < 102) then
       deityzilla.sprite = deityzilla.sprite + 2
@@ -1269,6 +1276,7 @@ function init_game()
   player = make_player(20,1)
   brawl_spawn = false
   brawl_clear = true
+  dz = make_deityzilla(100,0)
 
   create_obs(checkpoint, 77, 510, 4, 1, 6, 1, 2)
 
@@ -2256,3 +2264,4 @@ __music__
 00 1e1d5f44
 00 211f4344
 02 1d354344
+
