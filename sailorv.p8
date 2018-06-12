@@ -390,6 +390,7 @@ else
 
 
   if(solid(player, player.x, player.y-0.5, 7) and zone == 1) then
+
     player.x=40*8
     player.y=21*8
 
@@ -402,11 +403,11 @@ else
     cur_checkpoint.y = 20*8
 
     brawl_spawn = false
-
+    -- delete level objects and recreate them
+    delete_level_obs()
     instantiate_level_obs()
   end
-
-  if(solid(player, player.x, player.y-0.5, 7) and zone == 2) then
+  if(solid(player, player.x, player.y-0.5, 7) and zone == 2 and dz.health <= 0) then
     change_state(game_states.win_screen)
   end
 
@@ -427,7 +428,6 @@ function handle_combo()
 end
 
 function solid(obs, x, y, tag)
-
   if ((obs.tag == 1) or (obs.tag == 2)) or (obs.tag == 6) or (obs.tag == 7) or (obs.tag == 8) then
     local tilex1 = ((x - (x % 8)) / 8)
     local tilex2 = ((x - (x % 8) + 8) / 8)
@@ -725,6 +725,7 @@ end
 
 
 ------------------------------------------------ enemies
+
 shuriken = {
   tag = 3
 }
@@ -931,27 +932,45 @@ end
 
 function spawnbrawl(xlock, y_spawn)
   if brawl_spawn == false then
-
     brawl_spawn = true
     brawl_clear = false
-    enemycount = #allninjas
-    enemycount += 1
 
-    make_ninja(player.x - 50, y_spawn, 5)
-    make_ninja(player.x + 50, y_spawn, 5)
-    make_ninja(player.x - 100, y_spawn, 5)
-    make_ninja(player.x + 100, y_spawn, 5)
+    if (zone == 1) then
+      enemycount = #allzombies
+      enemycount += 1
+
+      make_zombie(player.x - 50, y_spawn, 5)
+      make_zombie(player.x + 50, y_spawn, 5)
+      make_zombie(player.x - 100, y_spawn, 5)
+      make_zombie(player.x + 100, y_spawn, 5)
+
+    elseif(zone == 2) then
+      enemycount = #allninjas
+      enemycount += 1
+
+      make_ninja(player.x - 50, y_spawn, 5)
+      make_ninja(player.x + 50, y_spawn, 5)
+      make_ninja(player.x - 100, y_spawn, 5)
+      make_ninja(player.x + 100, y_spawn, 5)
+    end
 
     if (xlock-cam.x>64+25) then cam.x+=1 end
-
     brawl_bounds = {x=xlock}
   end
 
   if not brawl_clear then
-    if #allninjas <= enemycount then
-      brawl_clear = true
-      enemycount = 0
-      drawarrow = true
+    if (zone == 1) then
+      if #allzombies <= enemycount then
+        brawl_clear = true
+        enemycount = 0
+        drawarrow = true
+      end
+    elseif (zone == 2) then
+      if #allninjas <= enemycount then
+        brawl_clear = true
+        enemycount = 0
+        drawarrow = true
+      end
     end
   end
 end
@@ -1098,13 +1117,48 @@ function update_deityzilla(deityzilla)
   if((deityzilla.y >= 150 and deityzilla.y <= 155) or (deityzilla.y >= 260 and deityzilla.y <= 265) or deityzilla.health == nil) then
     del(alldeities, deityzilla)
   end
-
 end
+
+function update_enemies()
+  -- spawn more enemies at randomized x locations
+  --if(player.x >= ninjaspawn) then
+  --if(player.x >= zombiespawn) then
+  if(zone==2 and player.x > 875 and spawn != 10000) then 
+    dz = make_deityzilla(900, 230) 
+    spawn = 10000
+  elseif(player.x >= spawn) then
+    if (zone == 1) then
+      make_zombie(player.x + 100, 0, 10)
+      spawn += 20
+      spawn += flr(rnd(100))
+    elseif (zone == 2) then
+       make_ninja(player.x + 100, 180, 10)
+       spawn += 50
+       spawn += flr(rnd(200))
+    end
+  end
+
+  foreach(shuriken, update_shuriken)
+  obs_collision(shuriken, player)
+  foreach(fireball, update_fireball)
+  obs_collision(fireball, player)
+  foreach(allninjas, move_actor)
+  foreach(allzombies, move_actor)
+  foreach(alldeities, move_actor)
+end
+
 
 function draw_deityzilla(deityzilla)
    spr(deityzilla.sprite, deityzilla.x, deityzilla.y-16, 2, 2, deityzilla.flip)
 end
 
+function draw_enemies()
+  foreach(allninjas, draw_ninja)
+  foreach(allzombies, draw_zombie)
+  foreach(alldeities, draw_deityzilla)
+  foreach(shuriken, draw_obj)
+  foreach(fireball, draw_obj)
+end
 
 ------------------------------- end enemies
 
@@ -1226,8 +1280,6 @@ end
 
 function init_game()
   player = make_player(20,1)
-  make_deityzilla(100, 0)
-
   brawl_spawn = false
   brawl_clear = true
 
@@ -1237,32 +1289,9 @@ function init_game()
 end
 
 function update_game()
-  -- spawn more ninjas at randomized x locations
-  --if(player.x >= ninjaspawn) then
-  if(player.x >= zombiespawn) then
-    if (zone == 1) then
-      --make_ninja(player.x + 100, 0, 10)
-      --ninjaspawn += 50
-      --ninjaspawn += flr(rnd(200))
-      make_zombie(player.x + 100, 0, 10)
-      zombiespawn += 50
-      zombiespawn += flr(rnd(200))
-    elseif (zone == 2) then
-      -- make_ninja(player.x + 100, 180, 10)
-      -- ninjaspawn += 50
-      -- ninjaspawn += flr(rnd(200))
-    end
-
-  end
-  foreach(shuriken, update_shuriken)
-  obs_collision(shuriken, player)
-  foreach(fireball, update_fireball)
-  obs_collision(fireball, player)
+  update_enemies()
   foreach(health_pack, update_health_pack)
   foreach(checkpoint, update_checkpoint)
-  foreach(allninjas, move_actor)
-  foreach(allzombies, move_actor)
-  foreach(alldeities, move_actor)
   move_actor(player)
 
   if(player.x >= 300 and player.x <= 350 and zone == 1) then
@@ -1322,12 +1351,8 @@ function draw_game()
 
 
   map(0, 0, 0, 0, 128, 32)
-  foreach(allninjas, draw_ninja)
-  foreach(shuriken, draw_obj)
-  foreach(allzombies, draw_zombie)
-  --draw_deityzilla()
-  foreach(alldeities, draw_deityzilla)
-  foreach(fireball, draw_obj)
+
+  draw_enemies()
   foreach(health_pack, draw_obj)
   foreach(checkpoint, draw_obj)
   if(blocking == true) then
@@ -1364,7 +1389,6 @@ end
    print(player.x,cam.x + 5,cam.y+40,0)
    print(player.y,cam.x + 5,cam.y+50,0)
   -- print(enemycount,cam.x + 5,48,0)
-   print(deityzilla.health,cam.x + 5,cam.y+60,0)
   draw_hearts()
   draw_lives()
   camera(0,0)
@@ -1600,13 +1624,10 @@ function draw_lives()
 end
 
 function instantiate_level_obs()
-  -- location to spawn first ninja
-  ninjaspawn = 0
-  zombiespawn = 0
+  -- location to spawn first enemy
+  spawn = 0
 
   if (zone == 1) then
-    make_ninja(469, 0, 10) -- because dan wanted a ninja here
-
     create_obs(health_pack, 39, 180, 4, 1, 4, 1, 1)
     create_obs(health_pack, 39, 300, 4, 1, 4, 1, 1)
     create_obs(health_pack, 39, 400, 4, 1, 4, 1, 1)
@@ -1635,11 +1656,20 @@ end
 
 function delete_level_obs()
   -- deletes ninjas and shurikens
+  for obj in all(allzombies) do
+    del(allzombies, obj)
+  end
   for obj in all(allninjas) do
     del(allninjas, obj)
   end
   for obj in all(shuriken) do
     del(shuriken, obj)
+  end
+  for obj in all(alldeities) do
+    del(alldeities, obj)
+  end
+  for obj in all(fireball) do
+    del(fireball, obj)
   end
   for obj in all(health_pack) do
     del(health_pack, obj)
