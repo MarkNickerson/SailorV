@@ -466,6 +466,7 @@ function obs_collision(obj1, obj2)
     elseif obj1.tag == 3 then
       if((f.y <= obj2.y) and (f.y >= obj2.y-16)) and ((f.x <= obj2.x+4) and (f.x >= obj2.x-4)) then
 
+        play_sound_effect(sound_effects.explosion)
         del(obj1, f)
         if blocking == false then
           if obj2.hearts > 0 then
@@ -768,7 +769,6 @@ function update_shuriken(obj)
       obj.flip = false
     else
       obj.x -= 8 * obj.dx
-
     end
   if(obj.flip == true) then
    obj.flip = false
@@ -873,11 +873,11 @@ end
 function throw_ninja(ninja)
    if(ninja.is_throwing == true) then
     if(ninja.throw_timer == 0) then -- spawn a shuriken once animation finishes
-            play_sound_effect(sound_effects.ninja_throw)
+    play_sound_effect(sound_effects.ninja_throw)
      if(ninja.flip) then -- facing right
-      create_obs(shuriken, 79, ninja.x+4, ninja.y-10, -1, 3, 1, 1) -- last 2 arguments are width and height of 1
+      create_obs(shuriken, 79, ninja.x+4, ninja.y-10, -1, 3, 1, 1) 
      else -- facing left
-      create_obs(shuriken, 79, ninja.x-4, ninja.y-10, 1, 3, 1, 1) -- last 2 arguments are width and height of 1
+      create_obs(shuriken, 79, ninja.x-4, ninja.y-10, 1, 3, 1, 1) 
      end
      ninja.is_throwing = false
         ninja.is_walking = true
@@ -897,8 +897,6 @@ function throw_ninja(ninja)
 end
 
 function update_ninja(ninja)
-  -- ninja spawns and runs to the left
-
   if(player.x < ninja.x and ninja.dx > -ninja.max_dx) then
    if((ninja.x - player.x) < 8) then
     ninja.dx = 0
@@ -1057,7 +1055,7 @@ function throw_deityzilla(deityzilla)
    if(deityzilla.is_throwing == true) then
     if(deityzilla.throw_timer == 0) then
       deityzilla.sprite = 104
-      --play_sound_effect(sound_effects.ninja_throw)
+      play_sound_effect(sound_effects.fireball)
      if(deityzilla.flip) then -- facing right
       create_obs(fireball, 95, deityzilla.x+4, deityzilla.y-14, -1, 3, 1, 1)
      else
@@ -1083,7 +1081,7 @@ function update_deityzilla(deityzilla)
    if(t % 10 == 0 and deityzilla.sprite < 102) then
       deityzilla.sprite = deityzilla.sprite + 2
     elseif(t % 10 == 0 and deityzilla.sprite == 102) then
-      --play_sound_effect(sound_effects.footstep)
+      play_sound_effect(sound_effects.big_footstep)
       deityzilla.sprite = 96
     end
 
