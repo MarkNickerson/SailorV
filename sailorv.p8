@@ -938,7 +938,9 @@ function spawnbrawl(xlock, y_spawn)
       make_zombie(player.x - 50, y_spawn, 5)
       make_zombie(player.x + 50, y_spawn, 5)
       make_ninja(player.x - 100, y_spawn, 5)
-      make_zombie(player.x + 100, y_spawn, 5)
+      make_ninja(player.x + 100, y_spawn, 5)
+      make_zombie(player.x - 25, y_spawn, 5)
+      make_zombie(player.x + 25, y_spawn, 5)
 
     elseif(zone == 2) then
       enemycount = #allninjas
