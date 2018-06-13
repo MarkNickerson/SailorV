@@ -227,7 +227,7 @@ function move_player()
   if btn(3) then
     if outter == 9 then
         play_sound_effect(sound_effects.shield_activate)
-    elseif outter < 8.8 and outter > 0then
+    elseif outter < 8.8 and outter > 0 then
         play_sound_effect(sound_effects.shield_hold)
     end
     if outter > 0 and inner  > 0 then
@@ -937,7 +937,7 @@ function spawnbrawl(xlock, y_spawn)
 
       make_zombie(player.x - 50, y_spawn, 5)
       make_zombie(player.x + 50, y_spawn, 5)
-      make_zombie(player.x - 100, y_spawn, 5)
+      make_ninja(player.x - 100, y_spawn, 5)
       make_zombie(player.x + 100, y_spawn, 5)
 
     elseif(zone == 2) then
@@ -1056,7 +1056,7 @@ function throw_deityzilla(deityzilla)
    if(deityzilla.is_throwing == true) then
     if(deityzilla.throw_timer == 0) then
       deityzilla.sprite = 104
-      play_sound_effect(sound_effects.fireball)
+      play_sound_effect(sound_effects.explosion)
      if(deityzilla.flip) then -- facing right
       create_obs(fireball, 95, deityzilla.x+4, deityzilla.y-14, -1, 3, 1, 1)
      else
@@ -1081,13 +1081,14 @@ function update_deityzilla(deityzilla)
     if deityzilla.jump_timer <= 0 then
         deityzilla.jump_timer = 50
         deityzilla.dy -= 7
-    else deityzilla.jump_timer -= 1
+    else 
+      deityzilla.jump_timer -= 1
     end
     
   throw_deityzilla(deityzilla)
-   if(t % 10 == 0 and deityzilla.sprite < 102) then
+   if(t % 15 == 0 and deityzilla.sprite < 102) then
       deityzilla.sprite = deityzilla.sprite + 2
-    elseif(t % 10 == 0 and deityzilla.sprite == 102) then
+    elseif(t % 15 == 0 and deityzilla.sprite == 102) then
       play_sound_effect(sound_effects.big_footstep)
       deityzilla.sprite = 96
     end
@@ -1116,13 +1117,23 @@ function update_deityzilla(deityzilla)
   end
 end
 
+spawncounter = 3
+
 function update_enemies()
+
   if(zone==2 and player.x > 875 and spawn != 10000) then 
     dz = make_deityzilla(900, 230) 
+    change_music(music_states.final_boss)
     spawn = 10000
   elseif(player.x >= spawn) then
     if (zone == 1) then
-      make_zombie(player.x + 100, 0, 10)
+      if(spawncounter == 0) then
+        make_ninja(player.x + 100, 0, 10)
+        spawncounter = 3
+      else
+        make_zombie(player.x + 100, 0, 10)
+        spawncounter -= 1
+      end
       spawn += 20
       spawn += flr(rnd(100))
     elseif (zone == 2) then
@@ -1242,7 +1253,7 @@ function draw_loading()
       local plot4 = ""
       if next_state == game_states.level1 then
           plot1 = "oh no!"
-          plot2 = "deityzilla and his ninjas"
+          plot2 = "deityzilla and his minions"
           plot3 = "are attacking the city! it's"
           plot4 = "up to sailor v to stop them!"
       elseif next_state == game_states.level2 then
@@ -1276,7 +1287,6 @@ function init_game()
   player = make_player(20,1)
   brawl_spawn = false
   brawl_clear = true
-  dz = make_deityzilla(100,0)
 
   create_obs(checkpoint, 77, 510, 4, 1, 6, 1, 2)
 
@@ -1381,8 +1391,8 @@ end
  -- print(player.incombo,cam.x,16,7)
   -- print(brawl_clear, cam.x + 5,24,0)
   -- print(brawl_spawn,cam.x + 5,32,0)
-   print(player.x,cam.x + 5,cam.y+40,0)
-   print(player.y,cam.x + 5,cam.y+50,0)
+  -- print(player.x,cam.x + 5,cam.y+40,0)
+  -- print(player.y,cam.x + 5,cam.y+50,0)
   -- print(enemycount,cam.x + 5,48,0)
   draw_hearts()
   draw_lives()
