@@ -1040,7 +1040,7 @@ function make_deityzilla(x, y)
     drag=0.02,            -- drag force
     gravity=0.15,         -- gravity
     flip = false,  -- false == left facing, true == right facing
-    health = 10,
+    health = 50,
     sprite = 96,
     is_throwing = false,
     is_walking = true,
