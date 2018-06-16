@@ -6,18 +6,10 @@ __lua__
     -- misato for the base game outline
     -- advanced micro platformer - starter kit by mhughson
         -- https://www.lexaloffle.com/bbs/?pid=37158#p37402
-
 --------------------------------------------------------------------------------
 
 game_states = {
-    splash = 0,
-    level1 = 1, --
-    level2 = 2, -- dungeon
-    level3 = 3, -- factory
-    level4 = 4, -- factory escape
-    lose_screen = 5,
-    win_screen = 6,
-    loading_screen = 7,
+    splash = 0, level1 = 1, level2 = 2, level3 = 3, level4 = 4, lose_screen = 5, win_screen = 6, loading_screen = 7,
 }
 
 cam = {
@@ -119,7 +111,6 @@ function block()
 end
 
 function kick()
-
   -- play attack sound
   play_sound_effect(sound_effects.player_attack)
 
@@ -146,14 +137,12 @@ function kick()
     player.x += 6
     end
   end
-
   obs_collision(allninjas, player)
   obs_collision(allzombies, player)
   obs_collision(alldeities, player)
 end
 
 function punch()
-
    -- play attack sound
    play_sound_effect(sound_effects.player_attack)
    actor.sprt = player.combo.sprt
@@ -179,7 +168,6 @@ function punch()
     player.x += 4
     end
   end
-
   obs_collision(allninjas, player)
   obs_collision(allzombies, player)
   obs_collision(alldeities, player)
@@ -1318,7 +1306,6 @@ end
 
 function draw_game()
   rectfill(0, 0, 127, 127, 1)
-
   --stars
   local x = t / 8
   x = x % 128
@@ -1344,7 +1331,6 @@ function draw_game()
 
   camera(0,0)
   if(brawl_clear and player.x <= 980) then
-
     if (player.x-cam.x<64-20) then
       if (zone == 1 and player.x>45) or (zone == 2 and player.x>340) then
         cam.x-=1
@@ -1355,10 +1341,7 @@ function draw_game()
 
   end
   camera(cam.x, cam.y)
-
-
   map(0, 0, 0, 0, 128, 32)
-
   draw_enemies()
   foreach(health_pack, draw_obj)
   foreach(checkpoint, draw_obj)
@@ -1371,31 +1354,17 @@ function draw_game()
       circfill(player.x-1, player.y-8, inner, 0)
     end
   end
-
   if drawarrow == true then
     draw_arrow()
   end
-
-
   draw_player()
 
-  --
- --write('combo: '..player.combo.attac,cam.x,cam.y+0,7)
- --write('damage:',cam.x,cam.y+8,7)
  if player.combo.dmg then
  --write(player.combo.dmg, cam.x+28,cam.y+8,7)
   if dmgtimer > 0 then
     write(-player.combo.dmg,dmg.x, dmg.y,8)
  end
 end
-
- -- print('combo timer:'..player.combotimer,cam.x,8,7)
- -- print(player.incombo,cam.x,16,7)
-  -- print(brawl_clear, cam.x + 5,24,0)
-  -- print(brawl_spawn,cam.x + 5,32,0)
-  -- print(player.x,cam.x + 5,cam.y+40,0)
-  -- print(player.y,cam.x + 5,cam.y+50,0)
-  -- print(enemycount,cam.x + 5,48,0)
   draw_hearts()
   draw_lives()
   camera(0,0)
@@ -1409,69 +1378,48 @@ function show_instructions()
 end
 
 function draw_instructions()
-
     if instructions_page == 0 then
         local header = 'controls'
         write(header, text_x_pos(header), 10, 7)
-
         local movement_text = "\139 \145  move left and right"
         write(movement_text, 10, 25, 7)
-
         local jump_text = "\148     jump"
         write(jump_text, 10, 35, 7)
-
         local shield_text = "\131     block"
         write(shield_text, 10, 45, 7)
-
         local punch_text = "z      punch"
         write(punch_text, 10, 55, 7)
-
         local kick_text = "x      kick"
         write(kick_text, 10, 65, 7)
-
         local block_info_text1 = 'note: your block does not last'
         write(block_info_text1, text_x_pos(block_info_text1), 80, 7)
-
         local block_info_text2 = 'forever and needs to recharge'
         write(block_info_text2, text_x_pos(block_info_text2), 90, 7)
-
         local more_info_text = 'press x for combo info'
         write(more_info_text, text_x_pos(more_info_text), 110, 7)
-
         local exit_text = 'press z to return to game'
         write(exit_text, text_x_pos(exit_text), 120, 7)
     elseif instructions_page == 1 then
         local header = 'combos'
         write(header, text_x_pos(header), 10, 7)
-
         local combo_text1 = 'use different combos of punch +'
         write(combo_text1, text_x_pos(combo_text1), 25, 7)
-
         local combo_text2 = 'kick for different situations'
         write(combo_text2, text_x_pos(combo_text2), 35, 7)
-
         local example_text = 'examples:'
         write(example_text, text_x_pos(example_text), 50, 7)
-
         local sample_combo1 = "xzzx - slow but powerful combo"
         write(sample_combo1, text_x_pos(sample_combo1), 60, 7)
-
         local sample_combo2 = "zzzz - fast but weak combo"
         write(sample_combo2, text_x_pos(sample_combo2), 70, 7)
-
         local try_text1 = "try different combos and"
         write(try_text1, text_x_pos(try_text1), 85, 7)
-
         local try_text2 = "see what works best!"
         write(try_text2, text_x_pos(try_text2), 95, 7)
-
         local more_info_text = 'press x for control info'
         write(more_info_text, text_x_pos(more_info_text), 110, 7)
-
         local exit_text = 'press z to return to game'
         write(exit_text, text_x_pos(exit_text), 120, 7)
-    else
-        throw("unknown instruction page")
     end
 end
 
@@ -1845,34 +1793,11 @@ right.right.right.right.dmg = 6
 
 -- enum for all possible music states
 music_states = {
-    splash_screen = 0,
-    city = 1,
-    dungeon = 2,
-    miniboss = 3,
-    factory = 4,
-    final_boss = 5,
-    lose_screen = 6,
-    win_screen = 7,
-    loading_screen = 8,
+    splash_screen = 0, city = 1, dungeon = 2, miniboss = 3,factory = 4, final_boss = 5, lose_screen = 6, win_screen = 7,loading_screen = 8,
 }
 
 sound_effects = {
-  shield_activate = 0,
-  player_attack = 1,
-  player_damaged = 2,
-  ninja_throw = 3,
-  enemy_damaged = 4,
-  player_jump = 5,
-  footstep = 6,
-  shield_hold = 7,
-  health_pickup = 8,
-  checkpoint = 9,
-  level_start = 10,
-  menu_sound = 11,
-  menu_close = 12,
-  big_footstep = 13,
-  explosion = 14,
-  fireball = 15,
+  shield_activate = 0, player_attack = 1, player_damaged = 2, ninja_throw = 3, enemy_damaged = 4, player_jump = 5, footstep = 6, shield_hold = 7, health_pickup = 8, checkpoint = 9, level_start = 10, menu_sound = 11, menu_close = 12, big_footstep = 13, explosion = 14, fireball = 15,
 }
 
 -- call this to change music based on given music_state
@@ -1977,8 +1902,6 @@ function play_sound_effect(sound_effect)
       sfx_num = 61
       length = 3
       offset = 8
-    else
-      throw("unknown sound effect")
     end
 
     sfx(sfx_num, channel_num, offset, length)
